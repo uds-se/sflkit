@@ -42,8 +42,8 @@ def main(args):
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(prog='SFLKit',
-                                         description='A workbench for statistical debugging python programs and '
-                                                     'in the future other programs.')
+                                         description='A workbench for statistical fault localization python programs' 
+                                                     'and in the future other programs.')
     arg_parser.add_argument('--debug', action='store_true', dest='debug', default=False,
                             help='the debug flag to activate debug information')
     arg_parser.add_argument('-c', '--config', dest='config', required=True, help='path to the config file')
