@@ -24,7 +24,7 @@ class ColorCode:
 
     def suspiciousness(self, location: Location):
         if location in self._suspiciousness:
-            return numpy.mean(self._suspiciousness[location])
+            return max(self._suspiciousness[location])
 
     def tooltip(self, location: Location) -> str:
         """

@@ -4,6 +4,7 @@ import os.path
 import queue
 from typing import List, Callable, Union
 
+from sflkit.analysis.predicate import Predicate
 from sflkit.analysis.analysis_type import AnalysisType
 from sflkit.analysis.factory import analysis_factory_mapping, CombinationFactory, AnalysisFactory
 from sflkit.analysis.mapping import analysis_mapping
@@ -93,7 +94,7 @@ class Config:
                 self.visitor = self.language.visitor(self.meta_visitor)
 
                 if 'metrics' in events:
-                    self.metrics = list(map(lambda m: getattr(Spectrum, m), list(csv.reader([events['metrics']]))[0]))
+                    self.metrics = list(map(lambda m: getattr(Predicate, m), list(csv.reader([events['metrics']]))[0]))
                 else:
                     self.metrics = [Spectrum.Ochiai]
 

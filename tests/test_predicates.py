@@ -7,7 +7,7 @@ from sflkit import instrument_config
 from sflkit.analysis.analysis_type import AnalysisType
 from sflkit.analysis.analyzer import Analyzer
 from sflkit.analysis.predicate import Condition, Branch
-from sflkit.analysis.spectra import Line
+from sflkit.analysis.spectra import Line, Spectrum
 from sflkit.analysis.suggestion import Location
 from sflkit.model.event_file import EventFile
 from sflkit.config import Config
@@ -75,14 +75,17 @@ class EventTests(unittest.TestCase):
         line, condition, branch = False, False, False
         for p in predicates:
             if isinstance(p, Line):
-                self.assertEqual(p.qe(), 1, f'qe is wrong for {p}')
+                self.assertEqual(1, p.get_metric(Spectrum.qe), f'qe is wrong for {p}')
                 line = True
             elif isinstance(p, Condition):
-                self.assertEqual(p.qe(), 1, f'qe is wrong for {p}')
+                self.assertEqual(1, p.get_metric(Spectrum.qe), f'qe is wrong for {p}')
                 condition = True
             elif isinstance(p, Branch):
-                self.assertEqual(p.qe(), 1, f'qe is wrong for {p}')
-                branch = True
+                if p.passed_observed or p.failed_observed:
+                    self.assertEqual(1, p.get_metric(Spectrum.qe), f'qe is wrong for {p}')
+                    branch = True
+                else:
+                    self.assertEqual(0, p.get_metric(Spectrum.qe), f'qe is wrong for {p}')
         self.assertTrue(line and condition and branch)
 
     def test_branches_irrelevant(self):
@@ -100,13 +103,13 @@ class EventTests(unittest.TestCase):
         line, condition, branch = False, False, False
         for p in predicates:
             if isinstance(p, Line):
-                self.assertEqual(p.qe(), 0, f'qe is wrong for {p}')
+                self.assertEqual(p.get_metric(Spectrum.qe), 0, f'qe is wrong for {p}')
                 line = True
             elif isinstance(p, Condition):
-                self.assertEqual(p.qe(), 0, f'qe is wrong for {p}')
+                self.assertEqual(p.get_metric(Spectrum.qe), 0, f'qe is wrong for {p}')
                 condition = True
             elif isinstance(p, Branch):
-                self.assertEqual(p.qe(), 0, f'qe is wrong for {p}')
+                self.assertEqual(p.get_metric(Spectrum.qe), 0, f'qe is wrong for {p}')
                 branch = True
         self.assertTrue(line and condition and branch)
 

@@ -19,7 +19,7 @@ class Predicate(Spectrum):
         self.false_irrelevant = 0
         self.fail_true = 0
         self.fail_false = 0
-        self.context = 0
+        self.context = 1
         self.increase_true = 0
         self.increase_false = 0
         self.true_hits = dict()
@@ -49,7 +49,7 @@ class Predicate(Spectrum):
     def get_metric(self, metric: Callable = None):
         if metric is None:
             metric = Predicate.IncreaseTrue
-        return metric(self)
+        return super().get_metric(metric)
 
     def evaluate(self, failed: bool = False, res: bool = False, scope_: scope.Scope = None):
         super().evaluate(failed)
@@ -108,8 +108,8 @@ class Predicate(Spectrum):
         return self.increase_false
 
     def Increase(self) -> Tuple[float, float]:
-        self.increase_true = self.fail_true - self.context
-        self.increase_false = self.fail_false - self.context
+        self.increase_true = max(self.fail_true - self.context, 0)
+        self.increase_false = max(self.fail_false - self.context, 0)
         return self.increase_true, self.increase_false
 
     def calculate(self):
@@ -134,11 +134,10 @@ class Branch(Predicate):
         return [EventType.BRANCH]
 
     def hit(self, id_, event, scope_: scope.Scope = None):
-        if event.then_id == self.then_id or event.else_id == self.then_id:
-            super(Predicate, self).hit(id_, event, scope_)
         if id_ not in self.true_hits:
             self.true_hits[id_] = 0
         if event.then_id == self.then_id:
+            super(Predicate, self).hit(id_, event, scope_)
             self.true_hits[id_] += 1
 
     def get_suggestion(self, metric: Callable = None, base_dir: str = ''):

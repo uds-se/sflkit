@@ -74,6 +74,7 @@ class BranchFactory(AnalysisFactory):
                 if else_key not in self.objects:
                     self.objects[else_key] = Branch(event, then=not then)
                 return [self.objects[key], self.objects[else_key]]
+            return [self.objects[key]]
 
 
 class FunctionFactory(AnalysisFactory):

@@ -71,6 +71,9 @@ class AnalysisObject(object):
     def assign_suspiciousness(self):
         pass
 
+    def evaluate(self, failed: bool = False, res: bool = False):
+        pass
+
     @staticmethod
     def handle(event, events: List[Type]):
         return any(map(lambda e: isinstance(event, e), events))
