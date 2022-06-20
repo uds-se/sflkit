@@ -50,7 +50,7 @@ This is the specification of the config file.
 ### Usage
 
 The general usage of SFLKit is
-```sh
+```
 usage: SFLKit [-h] [--debug] -c CONFIG {instrumentation,analyze} ...
 
 A workbench for statistical fault localization python programs and in the future other programs.
