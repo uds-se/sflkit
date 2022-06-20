@@ -21,8 +21,9 @@ def reset():
         dump_events()
     except BaseException:
         pass
-    global _event_path_file, _event_path_writer
+    global _event_path_file
     _event_path_file = open(os.getenv('EVENTS_PATH', default='EVENTS_PATH'), 'w')
+    global _event_path_writer
     _event_path_writer = csv.writer(_event_path_file)
 
 

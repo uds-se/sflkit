@@ -3,8 +3,8 @@ import subprocess
 import unittest
 
 from sflkit import instrument_config
+from sflkit.config import Config
 from sflkit.events import event
-from tests.utils import get_config
 
 test_resources = os.path.join('..', 'resources', 'subjects', 'tests')
 test_dir = 'test_dir'
@@ -17,7 +17,8 @@ access = 'main.py'
 class EventTests(unittest.TestCase):
 
     def test_lines(self):
-        config = get_config(os.path.join(test_resources, 'test_lines'), 'python', 'line', None, test_dir, None, None)
+        config = Config.config(path=os.path.join(test_resources, 'test_lines'), language='python', events='line',
+                               working=test_dir)
         instrument_config(config)
 
         subprocess.run([python, access], cwd=test_dir)
@@ -30,8 +31,8 @@ class EventTests(unittest.TestCase):
             self.assertEqual(e.line, i + 1, f'{e} has not correct line')
 
     def test_branches(self):
-        config = get_config(os.path.join(test_resources, 'test_branches'), 'python', 'line,branch', None, test_dir,
-                            None, None)
+        config = Config.config(path=os.path.join(test_resources, 'test_branches'), language='python',
+                               events='line,branch', working=test_dir)
         instrument_config(config)
 
         subprocess.run([python, access], cwd=test_dir)
@@ -62,8 +63,8 @@ class EventTests(unittest.TestCase):
 
     @staticmethod
     def _test_events(events):
-        config = get_config(os.path.join(test_resources, 'test_events'), 'python', events, None, test_dir,
-                            None, None)
+        config = Config.config(path=os.path.join(test_resources, 'test_events'), language='python', events=events,
+                               working=test_dir)
         instrument_config(config)
 
         subprocess.run([python, access], cwd=test_dir)

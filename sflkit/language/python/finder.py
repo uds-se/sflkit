@@ -8,6 +8,8 @@ from sflkit.language.finder import LocationsFinder, FunctionFinder, LoopFinder, 
 class PythonLocationsFinder(ast.NodeVisitor, LocationsFinder):
 
     def get_locations(self, base_dir: str):
+        if os.path.isfile(base_dir):
+            base_dir = '.'
         with open(os.path.join(base_dir, self.file), 'r') as fp:
             s = fp.read()
         tree = ast.parse(s)

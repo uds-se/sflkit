@@ -2,7 +2,7 @@ import configparser
 import csv
 import os.path
 import queue
-from typing import List, Callable
+from typing import List, Callable, Union
 
 from sflkit.analysis.analysis_type import AnalysisType
 from sflkit.analysis.factory import analysis_factory_mapping, CombinationFactory, AnalysisFactory
@@ -45,7 +45,7 @@ class Config:
     runner=TestRunner                       : The testrunner class, None if no run needed
     """
 
-    def __init__(self, path: str = None):
+    def __init__(self, path: Union[str, configparser.ConfigParser] = None):
         self.target_path = None
         self.language = None
         self.predicates = list()
@@ -60,8 +60,11 @@ class Config:
         self.instrument_working = None
         self.runner = None
         if path:
-            config = configparser.ConfigParser()
-            config.read(path)
+            if isinstance(path, configparser.ConfigParser):
+                config = path
+            else:
+                config = configparser.ConfigParser()
+                config.read(path)
             try:
 
                 # target section
@@ -118,11 +121,11 @@ class Config:
                 raise ConfigError(e)
 
     @staticmethod
-    def config(target_path: str = None, language: Language = None, predicates: List[AnalysisType] = None,
-               factory: AnalysisFactory = None, events: List[EventType] = None, metrics: List[Callable] = None,
-               meta_visitor: MetaVisitor = None, visitor: ASTVisitor = None, passing: List[EventFile] = None,
-               failing: List[EventFile] = None, instrument_exclude: List[str] = None,
-               instrument_working: str = None, runner: RunnerType = None):
+    def create_config(target_path: str = None, language: Language = None, predicates: List[AnalysisType] = None,
+                      factory: AnalysisFactory = None, events: List[EventType] = None, metrics: List[Callable] = None,
+                      meta_visitor: MetaVisitor = None, visitor: ASTVisitor = None, passing: List[EventFile] = None,
+                      failing: List[EventFile] = None, instrument_exclude: List[str] = None,
+                      instrument_working: str = None, runner: RunnerType = None):
         conf = Config()
         conf.target_path = target_path
         conf.language = language
@@ -155,6 +158,38 @@ class Config:
                 elif os.path.isfile(element) and not os.path.islink(element):
                     result.append(EventFile(element, run_id_generator.get_next_id(), failing=failing))
         return result
+
+    @staticmethod
+    def config(path=None, language=None, events=None, predicates=None, metrics=None, passing=None, failing=None,
+               working=None, exclude=None, runner=None):
+        config = configparser.ConfigParser()
+        config['target'] = dict()
+        config['events'] = dict()
+        config['instrumentation'] = dict()
+        config['test'] = dict()
+
+        if path:
+            config['target']['path'] = path
+        if language:
+            config['target']['language'] = language
+        if events:
+            config['events']['events'] = events
+        if predicates:
+            config['events']['predicates'] = predicates
+        if metrics:
+            config['events']['metrics'] = metrics
+        if passing:
+            config['events']['passing'] = passing
+        if failing:
+            config['events']['failing'] = failing
+        if working:
+            config['instrumentation']['path'] = working
+        if exclude:
+            config['instrumentation']['exclude'] = exclude
+        if runner:
+            config['test']['runner'] = runner
+
+        return Config(config)
 
 
 def parse_config(path: str) -> Config:

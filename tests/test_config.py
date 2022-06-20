@@ -1,18 +1,18 @@
 import unittest
 
+from sflkit.config import Config
 from sflkit.analysis.analysis_type import AnalysisType
 from sflkit.analysis.factory import DefUseFactory
 from sflkit.events import EventType
 from sflkit.language.language import Language
 from sflkit.language.python.factory import LineEventFactory, BranchEventFactory
-from tests.utils import get_config
 
 
 class ConfigTests(unittest.TestCase):
 
     def test_config(self):
-        config = get_config('test/path', 'Python', 'Line,Branch', None,
-                            'instrumentation/path', 'test,test2', None)
+        config = Config.config(path='test/path', language='Python', events='Line,Branch',
+                               working='instrumentation/path', exclude='test,test2')
         self.assertEqual('test/path', config.target_path)
         self.assertEqual(Language.PYTHON, config.language)
         self.assertEqual(2, len(config.events))
@@ -29,8 +29,8 @@ class ConfigTests(unittest.TestCase):
         self.assertIsNone(config.runner)
 
     def test_overwrite_predicates(self):
-        config = get_config('test/path', 'Python', 'Line,Branch', 'Def_Use',
-                            'instrumentation/path', None, None)
+        config = Config.config(path='test/path', language='Python', events='Line,Branch', predicates='Def_Use',
+                               working='instrumentation/path')
         self.assertEqual('test/path', config.target_path)
         self.assertEqual(Language.PYTHON, config.language)
         self.assertEqual(2, len(config.events))

@@ -10,7 +10,7 @@ from sflkit.analysis.predicate import Condition, Branch
 from sflkit.analysis.spectra import Line
 from sflkit.analysis.suggestion import Location
 from sflkit.model.event_file import EventFile
-from tests.utils import get_config
+from sflkit.config import Config
 
 test_resources = os.path.join('..', 'resources', 'subjects', 'tests')
 test_dir = 'test_dir'
@@ -23,7 +23,8 @@ access = 'main.py'
 class EventTests(unittest.TestCase):
 
     def test_lines_relevant(self):
-        config = get_config(os.path.join(test_resources, 'test_lines'), 'python', 'line', 'line', test_dir, None, None)
+        config = Config.config(path=os.path.join(test_resources, 'test_lines'), language='python', events='line',
+                               predicates='line', working=test_dir)
         instrument_config(config)
 
         subprocess.run([python, access], cwd=test_dir)
@@ -41,7 +42,8 @@ class EventTests(unittest.TestCase):
         self.assertTrue(line)
 
     def test_lines_irrelevant(self):
-        config = get_config(os.path.join(test_resources, 'test_lines'), 'python', 'line', 'line', test_dir, None, None)
+        config = Config.config(path=os.path.join(test_resources, 'test_lines'), language='python', events='line',
+                               predicates='line', working=test_dir)
         instrument_config(config)
 
         subprocess.run([python, access], cwd=test_dir)
@@ -59,9 +61,8 @@ class EventTests(unittest.TestCase):
         self.assertTrue(line)
 
     def test_branches_relevant(self):
-        config = get_config(os.path.join(test_resources, 'test_branches'), 'python', 'branch', 'line,branch,condition',
-                            test_dir, None,
-                            None)
+        config = Config.config(path=os.path.join(test_resources, 'test_branches'), language='python', events='branch',
+                               predicates='line,branch,condition', working=test_dir)
         instrument_config(config)
 
         subprocess.run([python, access], cwd=test_dir)
@@ -85,9 +86,8 @@ class EventTests(unittest.TestCase):
         self.assertTrue(line and condition and branch)
 
     def test_branches_irrelevant(self):
-        config = get_config(os.path.join(test_resources, 'test_branches'), 'python', 'branch', 'line,branch,condition',
-                            test_dir, None,
-                            None)
+        config = Config.config(path=os.path.join(test_resources, 'test_branches'), language='python', events='branch',
+                               predicates='line,branch,condition', working=test_dir)
         instrument_config(config)
 
         subprocess.run([python, access], cwd=test_dir)
@@ -116,8 +116,8 @@ class SuggestionsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         original_dir = os.path.join(test_resources, 'test_suggestions')
-        config = get_config(original_dir, 'python', 'branch', 'line,def_use,branch',
-                            test_dir, None, None)
+        config = Config.config(original_dir, language='python', events='branch',
+                               predicates='line,branch,def_use', working=test_dir)
         instrument_config(config)
 
         subprocess.run([python, access, '2', '1', '3'], cwd=test_dir)
