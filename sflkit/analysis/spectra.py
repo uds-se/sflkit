@@ -108,8 +108,25 @@ class Spectrum(AnalysisObject):
                 ((self.failed_observed + self.passed_observed) * self.passed +
                  self.failed * (self.failed_not_observed + self.passed_not_observed)))
 
+    def Crosstab(self):
+        return ((self.failed_not_observed - ((self.failed_observed + self.passed_observed) *
+                                             self.failed / (self.failed + self.passed))) ** 2 /
+                ((self.failed_observed + self.passed_observed) * self.failed / (self.failed + self.passed)) +
+                (self.pass_observed - ((self.failed_observed + self.passed_observed) *
+                                       self.passed / (self.failed + self.passed))) ** 2 /
+                ((self.failed_observed + self.passed_observed) * self.passed / (self.failed + self.passed)) +
+                (self.failed_not_observed - ((self.failed_not_observed + self.passed_not_observed) *
+                                             self.failed / (self.failed + self.passed))) ** 2 /
+                ((self.failed_not_observed + self.passed_not_observed) * self.failed / (self.failed + self.passed)) +
+                (self.passed_not_observed - ((self.failed_not_observed + self.passed_not_observed)
+                                             * self.passed / (self.failed + self.passed))) ** 2 /
+                ((self.failed_not_observed + self.passed_not_observed) * self.passed / (self.failed + self.passed)))
+
     def Dice(self):
         return 2 * self.failed_observed / (self.failed + self.passed_observed)
+
+    def DStar(self, n=2):
+        return self.failed_observed * n / (self.failed_not_observed + self.passed_observed)
 
     def Euclid(self):
         return np.sqrt(self.failed_observed + self.passed_not_observed)
@@ -120,6 +137,19 @@ class Spectrum(AnalysisObject):
                  (self.failed_not_observed - self.passed_observed) ** 2) /
                 ((2 * self.failed_observed + self.failed_not_observed + self.passed_observed) +
                  (2 * self.passed_not_observed + self.failed_not_observed + self.passed_observed)))
+
+    def GP02(self):
+        return 2 * (self.failed_observed + np.sqrt(self.passed_not_observed)) + np.sqrt(self.passed_observed)
+
+    def GP03(self):
+        return np.sqrt(abs(self.failed_observed ** 2 - np.sqrt(self.passed_observed)))
+
+    def GP13(self):
+        return self.failed_observed * (1 + 1 / (2 * self.passed_observed + self.failed_observed))
+
+    def GP19(self):
+        return self.failed_observed * np.sqrt(abs(self.passed_observed - self.failed_observed +
+                                                  self.failed_not_observed - self.passed_not_observed))
 
     def Goodman(self):
         return ((2 * self.failed_observed - self.failed_not_observed - self.passed_observed) /
