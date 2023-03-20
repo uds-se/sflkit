@@ -153,3 +153,6 @@ event-files
 tmp.ini
 tmp.py
 
+test_dir/
+.DS_Store
+

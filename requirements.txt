@@ -1,4 +1,6 @@
 astor>=0.8.1
-numpy>=1.22
+numpy>=1.24.0
 matplotlib>=3.4.3
-setuptools>=57.4.0
+setuptools>=67.6.0
+pycparser>=2.20
+pytest>=7.2.2

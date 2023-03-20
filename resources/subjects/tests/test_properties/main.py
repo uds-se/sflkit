@@ -1,5 +1,4 @@
 class T:
-
     def __init__(self):
         self.t = 0
 

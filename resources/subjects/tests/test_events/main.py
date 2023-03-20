@@ -1,5 +1,4 @@
 class A:
-
     def __init__(self, b):  # defs: 2, uses: 1
         self.b = b
 
@@ -15,11 +14,11 @@ def a(b, c):  # defs: 2, uses: 0
 
 
 if a(4, 5) and a(1, 1):
-    print('passed')
+    print("passed")
 else:
-    print('failed')
+    print("failed")
 
 try:
     raise ValueError()
 except ValueError:
-    print('catch')
+    print("catch")
