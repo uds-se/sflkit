@@ -2,6 +2,7 @@ from typing import List, Callable
 
 from sflkit.analysis.analysis_type import AnalysisType
 from sflkit.analysis.factory import AnalysisFactory
+from sflkit.analysis.suggestion import Suggestion
 from sflkit.model.event_file import EventFile
 from sflkit.model.model import Model
 
@@ -49,7 +50,19 @@ class Analyzer(object):
             objects = self.get_analysis_by_type(type_)
         else:
             objects = self.get_analysis()
+        suggestions = dict()
+        for suggestion in map(
+            lambda p: p.get_suggestion(metric=metric, base_dir=base_dir), objects
+        ):
+            if suggestion.suspiciousness not in suggestions:
+                suggestions[suggestion.suspiciousness] = set(suggestion.lines)
+            else:
+                suggestions[suggestion.suspiciousness] |= set(suggestion.lines)
+
         return sorted(
-            map(lambda p: p.get_suggestion(metric=metric, base_dir=base_dir), objects),
+            [
+                Suggestion(list(lines), suspiciousness)
+                for suspiciousness, lines in suggestions.items()
+            ],
             reverse=True,
         )[:]

@@ -17,7 +17,7 @@ class Model(object):
         self.current_run_id = run_id
 
     def handle_event(self, event, scope: Scope = None):
-        analysis = self.factory.handle(event)
+        analysis = self.factory.handle(event, scope=scope)
         for a in analysis:
             a.hit(self.current_run_id, event, scope)
 
@@ -32,6 +32,7 @@ class Model(object):
         self.handle_event(event)
 
     def handle_function_exit_event(self, event):
+        self.returns.add(event.function, event.return_value, event.type_)
         self.handle_event(event, self.returns)
         self.exit_scope()
 

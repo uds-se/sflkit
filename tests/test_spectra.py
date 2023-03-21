@@ -127,3 +127,4 @@ class TestComparison(unittest.TestCase):
             getattr(self.line_1, op)(f1),
             f"{op} provides wrong result if line_1.{op}({f1})",
         )
+        self.assertRaises(TypeError, getattr(self.line_1, op), "1")

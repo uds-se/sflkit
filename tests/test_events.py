@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+from parameterized import parameterized
+
 from sflkit import instrument_config
 from sflkit.config import Config
 from sflkit.events import event
@@ -255,3 +257,54 @@ class EventTests(BaseTest):
             self.assertEqual(line, e.line, f"{e} has not correct line")
             self.assertEqual(ev, e.value, f"{e} has not correct value")
             self.assertEqual(exp, e.condition, f"{e} has not correct condition")
+
+
+class SerializeEventsTest(BaseTest):
+    EVENTS = [
+        event.LineEvent("main.py", 1, 0),
+        event.BranchEvent("main.py", 1, 1, 0, 1),
+        event.BranchEvent("main.py", 1, 2, 1, 0),
+        event.FunctionEnterEvent("main.py", 1, 3, 0, "main"),
+        event.FunctionExitEvent("main.py", 1, 4, 0, "main", 1, "int", "x"),
+        event.FunctionExitEvent("main.py", 1, 5, 0, "main", True, "bool", "x"),
+        event.FunctionExitEvent("main.py", 1, 6, 0, "main", False, "bool", "x"),
+        event.FunctionExitEvent("main.py", 1, 7, 0, "main", None, "int", "x"),
+        event.FunctionErrorEvent("main.py", 1, 8, 0, "main"),
+        event.DefEvent("main.py", 1, 9, "x", 0, 1, "int"),
+        event.DefEvent("main.py", 1, 10, "x", 0, True, "bool"),
+        event.DefEvent("main.py", 1, 11, "x", 0, False, "bool"),
+        event.DefEvent("main.py", 1, 12, "x", 0, None, "int"),
+        event.UseEvent("main.py", 1, 13, "x", 0),
+        event.ConditionEvent("main.py", 1, 14, "x < y", True, "x"),
+        event.LoopBeginEvent("main.py", 1, 15, 0),
+        event.LoopHitEvent("main.py", 1, 16, 0),
+        event.LoopEndEvent("main.py", 1, 17, 0),
+    ]
+
+    @parameterized.expand(map(lambda x: (str(x), x), EVENTS))
+    def test_serialize(self, _, e):
+        self.assertEqual(e, event.deserialize(event.serialize(e)))
+
+    @parameterized.expand(map(lambda x: (str(x), x), EVENTS))
+    def test_load(self, _, e):
+        args = e.dump()[1:]
+        if e.event_type == event.EventType.FUNCTION_EXIT:
+            if e.return_value == 1:
+                args[5] = b"\x80\x04K\x01."
+            elif e.return_value is None:
+                args[5] = "None"
+            elif e.return_value:
+                args[5] = "True"
+            elif not e.return_value:
+                args[5] = "False"
+        elif e.event_type == event.EventType.DEF:
+            if e.value == 1:
+                args[5] = b"\x80\x04K\x01."
+            elif e.value is None:
+                args[5] = "None"
+            elif e.value:
+                args[5] = "True"
+            elif not e.value:
+                args[5] = "False"
+
+        self.assertEqual(e, event.load_event(e.event_type, *args))

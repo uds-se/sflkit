@@ -120,8 +120,8 @@ class Predicate(Spectrum, ABC):
         return self.increase_false
 
     def Increase(self) -> Tuple[float, float]:
-        self.increase_true = max(self.fail_true - self.context, 0)
-        self.increase_false = max(self.fail_false - self.context, 0)
+        self.increase_true = self.fail_true - self.context
+        self.increase_false = self.fail_false - self.context
         return self.increase_true, self.increase_false
 
     def calculate(self):
@@ -238,6 +238,12 @@ class VariablePredicate(Comparison):
     def analysis_type():
         return AnalysisType.VARIABLE
 
+    @staticmethod
+    def events():
+        return [
+            EventType.DEF,
+        ]
+
     def _get_first(self, scope_: scope.Scope):
         return scope_.value(self.var)
 
@@ -251,6 +257,12 @@ class NonePredicate(Comparison):
     def analysis_type():
         return AnalysisType.NONE
 
+    @staticmethod
+    def events():
+        return [
+            EventType.DEF,
+        ]
+
     def _get_first(self, scope_: scope.Scope):
         return scope_.value(self.var)
 
@@ -259,22 +271,28 @@ class NonePredicate(Comparison):
 
 
 class ReturnPredicate(Comparison):
-    def __init__(
-        self, event: FunctionExitEvent, op: Comp, true_relevant: Optional[int] = 0
-    ):
+    def __init__(self, event: FunctionExitEvent, op: Comp, value: Optional[int] = 0):
         super().__init__(event.file, event.line, op)
         self.function = event.function
-        self.true_relevant = true_relevant
+        self.value = value
 
     @staticmethod
     def analysis_type():
         return AnalysisType.RETURN
 
+    @staticmethod
+    def events():
+        return [
+            EventType.FUNCTION_ENTER,
+            EventType.FUNCTION_EXIT,
+            EventType.FUNCTION_ERROR,
+        ]
+
     def _get_first(self, scope_: scope.Scope):
         return scope_.value(self.function)
 
     def _get_second(self, scope_: scope.Scope):
-        return self.true_relevant
+        return self.value
 
 
 class EmptyStringPredicate(Comparison):
@@ -285,6 +303,12 @@ class EmptyStringPredicate(Comparison):
     @staticmethod
     def analysis_type():
         return AnalysisType.EMPTY_STRING
+
+    @staticmethod
+    def events():
+        return [
+            EventType.DEF,
+        ]
 
     def _get_first(self, scope_: scope.Scope):
         return scope_.value(self.var)
@@ -301,6 +325,12 @@ class EmptyBytesPredicate(Comparison):
     @staticmethod
     def analysis_type():
         return AnalysisType.EMPTY_BYTES
+
+    @staticmethod
+    def events():
+        return [
+            EventType.DEF,
+        ]
 
     def _get_first(self, scope_: scope.Scope):
         return scope_.value(self.var)
@@ -319,13 +349,11 @@ class FunctionPredicate(Predicate, ABC):
     def events():
         return [
             EventType.DEF,
-            EventType.FUNCTION_ENTER,
-            EventType.FUNCTION_EXIT,
-            EventType.FUNCTION_ERROR,
         ]
 
     def _evaluate_predicate(self, scope_: scope.Scope):
-        return self.predicate(scope_.value(self.var))
+        value = scope_.value(self.var)
+        return isinstance(value, str) and self.predicate(scope_.value(self.var))
 
 
 class IsAsciiPredicate(FunctionPredicate):
@@ -335,10 +363,6 @@ class IsAsciiPredicate(FunctionPredicate):
     @staticmethod
     def analysis_type():
         return AnalysisType.ASCII_STRING
-
-    @staticmethod
-    def events():
-        return [EventType.DEF]
 
 
 class ContainsDigitPredicate(FunctionPredicate):
@@ -353,10 +377,6 @@ class ContainsDigitPredicate(FunctionPredicate):
     def analysis_type():
         return AnalysisType.DIGIT_STRING
 
-    @staticmethod
-    def events():
-        return [EventType.DEF]
-
 
 class ContainsSpecialPredicate(FunctionPredicate):
     def __init__(self, event: DefEvent):
@@ -369,10 +389,6 @@ class ContainsSpecialPredicate(FunctionPredicate):
     @staticmethod
     def analysis_type():
         return AnalysisType.SPECIAL_STRING
-
-    @staticmethod
-    def events():
-        return [EventType.DEF]
 
 
 class Condition(Predicate):

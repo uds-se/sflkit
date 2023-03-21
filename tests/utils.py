@@ -20,6 +20,8 @@ class BaseTest(unittest.TestCase):
     TEST_BRANCHES = "test_branches"
     TEST_SUGGESTIONS = "test_suggestions"
     TEST_PROPERTIES = "test_properties"
+    TEST_SPECIAL_VALUES = "test_special_values"
+    DELTA = 0.0000001
 
     @staticmethod
     def execute_subject(test: List[str], count: int):

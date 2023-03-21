@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import List, Type, Set
 
 from sflkit.analysis.analysis_type import AnalysisObject, AnalysisType
@@ -24,6 +25,7 @@ class AnalysisFactory:
     def __init__(self):
         self.objects = dict()
 
+    @abstractmethod
     def get_analysis(self, event, scope: Scope = None) -> List[AnalysisObject]:
         pass
 
@@ -243,9 +245,7 @@ class ReturnFactory(AnalysisFactory):
                         type_,
                     )
                     if key not in self.objects:
-                        self.objects[key] = ReturnPredicate(
-                            event, comp, true_relevant=tr
-                        )
+                        self.objects[key] = ReturnPredicate(event, comp, value=tr)
                     objects.append(self.objects[key])
             if event.type_ == "NoneType":
                 for comp in Comp.EQ, Comp.NE:
@@ -258,9 +258,7 @@ class ReturnFactory(AnalysisFactory):
                         event.event_type_,
                     )
                     if key not in self.objects:
-                        self.objects[key] = ReturnPredicate(
-                            event, comp, true_relevant=None
-                        )
+                        self.objects[key] = ReturnPredicate(event, comp, value=None)
                     objects.append(self.objects[key])
             else:
                 for comp in Comp.EQ, Comp.NE:
@@ -293,7 +291,7 @@ class ConstantCompFactory(AnalysisFactory):
                     event.var,
                     comp,
                 )
-                if key in self.objects:
+                if key not in self.objects:
                     self.objects[key] = self.class_(event)
                 objects.append(self.objects[key])
             return objects
@@ -309,24 +307,42 @@ class EmptyStringFactory(ConstantCompFactory):
         super().__init__(EmptyStringPredicate)
 
 
-class IsAsciiFactory(ConstantCompFactory):
+class EmptyBytesFactory(ConstantCompFactory):
+    def __init__(self):
+        super().__init__(EmptyBytesPredicate)
+
+
+class PredicateFunctionFactory(AnalysisFactory):
+    def __init__(self, class_: Type[AnalysisObject]):
+        super().__init__()
+        self.class_ = class_
+
+    def get_analysis(self, event, scope: Scope = None) -> List[AnalysisObject]:
+        if event.event_type == EventType.DEF:
+            key = (
+                self.class_.analysis_type(),
+                event.file,
+                event.line,
+                event.var,
+            )
+            if key not in self.objects:
+                self.objects[key] = self.class_(event)
+            return [self.objects[key]]
+
+
+class IsAsciiFactory(PredicateFunctionFactory):
     def __init__(self):
         super().__init__(IsAsciiPredicate)
 
 
-class ContainsDigitFactory(ConstantCompFactory):
+class ContainsDigitFactory(PredicateFunctionFactory):
     def __init__(self):
         super().__init__(ContainsDigitPredicate)
 
 
-class ContainsSpecialFactory(ConstantCompFactory):
+class ContainsSpecialFactory(PredicateFunctionFactory):
     def __init__(self):
         super().__init__(ContainsSpecialPredicate)
-
-
-class EmptyBytesFactory(ConstantCompFactory):
-    def __init__(self):
-        super().__init__(EmptyBytesPredicate)
 
 
 analysis_factory_mapping = {

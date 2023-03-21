@@ -47,7 +47,7 @@ class Event(object):
             "event_type": self.event_type.value,
         }
 
-    def dump(self):
+    def dump(self) -> list:
         return [self.event_type.value, self.file, self.line, self.id_]
 
     @staticmethod
@@ -72,9 +72,9 @@ class LineEvent(Event):
 
     @staticmethod
     def deserialize(s: dict):
-        assert all(p in s for p in ["file", "line", "id_"])
+        assert all(p in s for p in ["file", "line", "id"])
         assert s["event_type"] == EventType.LINE.value
-        return LineEvent(*[s[p] for p in ["file", "line", "id_"]])
+        return LineEvent(*[s[p] for p in ["file", "line", "id"]])
 
 
 class BranchEvent(Event):
@@ -100,10 +100,10 @@ class BranchEvent(Event):
 
     @staticmethod
     def deserialize(s: dict):
-        assert all(p in s for p in ["file", "line", "id_", "then_id", "else_id"])
+        assert all(p in s for p in ["file", "line", "id", "then_id", "else_id"])
         assert s["event_type"] == EventType.BRANCH.value
         return BranchEvent(
-            *[s[p] for p in ["file", "line", "id_", "then_id", "else_id"]]
+            *[s[p] for p in ["file", "line", "id", "then_id", "else_id"]]
         )
 
     @staticmethod
@@ -144,9 +144,9 @@ class DefEvent(Event):
 
     @staticmethod
     def deserialize(s: dict):
-        assert all(p in s for p in ["file", "line", "id_", "var"])
+        assert all(p in s for p in ["file", "line", "id", "var"])
         assert s["event_type"] == EventType.DEF.value
-        return DefEvent(*[s[p] for p in ["file", "line", "id_", "var"]])
+        return DefEvent(*[s[p] for p in ["file", "line", "id", "var"]])
 
 
 class FunctionEnterEvent(Event):
@@ -172,10 +172,10 @@ class FunctionEnterEvent(Event):
 
     @staticmethod
     def deserialize(s: dict):
-        assert all(p in s for p in ["file", "line", "id_", "function_id", "function"])
+        assert all(p in s for p in ["file", "line", "id", "function_id", "function"])
         assert s["event_type"] == EventType.FUNCTION_ENTER.value
         return FunctionEnterEvent(
-            *[s[p] for p in ["file", "line", "id_", "function_id", "function"]]
+            *[s[p] for p in ["file", "line", "id", "function_id", "function"]]
         )
 
 
@@ -223,9 +223,11 @@ class FunctionExitEvent(Event):
 
     @staticmethod
     def deserialize(s: dict):
-        assert all(p in s for p in ["file", "line", "id_", "function"])
+        assert all(p in s for p in ["file", "line", "id", "function_id", "function"])
         assert s["event_type"] == EventType.FUNCTION_EXIT.value
-        return FunctionExitEvent(*[s[p] for p in ["file", "line", "id_", "function"]])
+        return FunctionExitEvent(
+            *[s[p] for p in ["file", "line", "id", "function_id", "function"]]
+        )
 
 
 class FunctionErrorEvent(Event):
@@ -254,10 +256,10 @@ class FunctionErrorEvent(Event):
 
     @staticmethod
     def deserialize(s: dict):
-        assert all(p in s for p in ["file", "line", "id_", "function_id", "function"])
+        assert all(p in s for p in ["file", "line", "id", "function_id", "function"])
         assert s["event_type"] == EventType.FUNCTION_ERROR.value
         return FunctionErrorEvent(
-            *[s[p] for p in ["file", "line", "id_", "function_id", "function"]]
+            *[s[p] for p in ["file", "line", "id", "function_id", "function"]]
         )
 
 
@@ -292,9 +294,9 @@ class ConditionEvent(Event):
 
     @staticmethod
     def deserialize(s: dict):
-        assert all(p in s for p in ["file", "line", "id_", "condition"])
+        assert all(p in s for p in ["file", "line", "id", "condition"])
         assert s["event_type"] == EventType.CONDITION.value
-        return ConditionEvent(*[s[p] for p in ["file", "line", "id_", "condition"]])
+        return ConditionEvent(*[s[p] for p in ["file", "line", "id", "condition"]])
 
 
 class LoopBeginEvent(Event):
@@ -315,9 +317,9 @@ class LoopBeginEvent(Event):
 
     @staticmethod
     def deserialize(s: dict):
-        assert all(p in s for p in ["file", "line", "id_", "loop_id"])
+        assert all(p in s for p in ["file", "line", "id", "loop_id"])
         assert s["event_type"] == EventType.LOOP_BEGIN.value
-        return LoopBeginEvent(*[s[p] for p in ["file", "line", "id_", "loop_id"]])
+        return LoopBeginEvent(*[s[p] for p in ["file", "line", "id", "loop_id"]])
 
 
 class LoopHitEvent(Event):
@@ -338,9 +340,9 @@ class LoopHitEvent(Event):
 
     @staticmethod
     def deserialize(s: dict):
-        assert all(p in s for p in ["file", "line", "id_", "loop_id"])
+        assert all(p in s for p in ["file", "line", "id", "loop_id"])
         assert s["event_type"] == EventType.LOOP_HIT.value
-        return LoopBeginEvent(*[s[p] for p in ["file", "line", "id_", "loop_id"]])
+        return LoopHitEvent(*[s[p] for p in ["file", "line", "id", "loop_id"]])
 
 
 class LoopEndEvent(Event):
@@ -361,9 +363,9 @@ class LoopEndEvent(Event):
 
     @staticmethod
     def deserialize(s: dict):
-        assert all(p in s for p in ["file", "line", "id_", "loop_id"])
+        assert all(p in s for p in ["file", "line", "id", "loop_id"])
         assert s["event_type"] == EventType.LOOP_END.value
-        return LoopBeginEvent(*[s[p] for p in ["file", "line", "id_", "loop_id"]])
+        return LoopEndEvent(*[s[p] for p in ["file", "line", "id", "loop_id"]])
 
 
 class UseEvent(Event):
@@ -388,9 +390,9 @@ class UseEvent(Event):
 
     @staticmethod
     def deserialize(s: dict):
-        assert all(p in s for p in ["file", "line", "id_", "var"])
+        assert all(p in s for p in ["file", "line", "id", "var"])
         assert s["event_type"] == EventType.USE.value
-        return UseEvent(*[s[p] for p in ["file", "line", "id_", "var"]])
+        return UseEvent(*[s[p] for p in ["file", "line", "id", "var"]])
 
 
 def serialize(event: Event):
