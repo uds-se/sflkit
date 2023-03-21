@@ -45,7 +45,7 @@ similarity_coefficients = [
 
 def _get_similarity_coefficients(similarity_coefficient):
     return lambda po, pn, fo, fn: getattr(
-        spectra.Spectrum(po, pn, fo, fn), similarity_coefficient
+        spectra.Spectrum("", 0, po, pn, fo, fn), similarity_coefficient
     )()
 
 

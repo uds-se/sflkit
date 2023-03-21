@@ -3,3 +3,4 @@ numpy>=1.24.0
 matplotlib>=3.4.3
 setuptools>=67.6.0
 pycparser>=2.20
+parameterized>=0.8.1

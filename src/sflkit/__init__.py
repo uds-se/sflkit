@@ -60,4 +60,6 @@ __all__ = [
     "instrument_config",
     "analyze",
     "analyze_config",
+    "Analyzer",
+    "Config",
 ]

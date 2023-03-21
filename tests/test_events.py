@@ -1,50 +1,43 @@
 import os
 import subprocess
-import unittest
 
 from sflkit import instrument_config
 from sflkit.config import Config
 from sflkit.events import event
-
-test_resources = os.path.join("resources", "subjects", "tests")
-test_dir = "test_dir"
-test_events = "test_events.json"
-test_path = "EVENTS_PATH"
-python = "python3.10"
-access = "main.py"
+from utils import BaseTest
 
 
-class EventTests(unittest.TestCase):
+class EventTests(BaseTest):
     def test_lines(self):
         config = Config.config(
-            path=os.path.join(test_resources, "test_lines"),
+            path=os.path.join(self.TEST_RESOURCES, self.TEST_LINES),
             language="python",
             events="line",
-            working=test_dir,
+            working=self.TEST_DIR,
         )
         instrument_config(config)
 
-        subprocess.run([python, access], cwd=test_dir)
+        subprocess.run([self.PYTHON, self.ACCESS], cwd=self.TEST_DIR)
 
-        events = event.load(os.path.join(test_dir, test_path))
+        events = event.load(os.path.join(self.TEST_DIR, self.TEST_PATH))
         self.assertEqual(3, len(events))
         for i, e in enumerate(events):
             self.assertIsInstance(e, event.LineEvent, f"{e} is not a line event")
-            self.assertEqual(e.file, access, f"{e} has not correct file")
-            self.assertEqual(e.line, i + 1, f"{e} has not correct line")
+            self.assertEqual(self.ACCESS, e.file, f"{e} has not correct file")
+            self.assertEqual(i + 1, e.line, f"{e} has not correct line")
 
     def test_branches(self):
         config = Config.config(
-            path=os.path.join(test_resources, "test_branches"),
+            path=os.path.join(self.TEST_RESOURCES, self.TEST_BRANCHES),
             language="python",
             events="line,branch",
-            working=test_dir,
+            working=self.TEST_DIR,
         )
         instrument_config(config)
 
-        subprocess.run([python, access], cwd=test_dir)
+        subprocess.run([self.PYTHON, self.ACCESS], cwd=self.TEST_DIR)
 
-        events = event.load(os.path.join(test_dir, test_path))
+        events = event.load(os.path.join(self.TEST_DIR, self.TEST_PATH))
         self.assertEqual(5, len(events))
         lines = [1, 4, 5]
         line_i = 0
@@ -54,16 +47,16 @@ class EventTests(unittest.TestCase):
         for e in events:
             if e.event_type == event.EventType.LINE:
                 self.assertIsInstance(e, event.LineEvent, f"{e} is not a line event")
-                self.assertEqual(e.file, access, f"{e} has not correct file")
-                self.assertEqual(e.line, lines[line_i], f"{e} has not correct line")
+                self.assertEqual(self.ACCESS, e.file, f"{e} has not correct file")
+                self.assertEqual(lines[line_i], e.line, f"{e} has not correct line")
                 line_i += 1
             elif e.event_type == event.EventType.BRANCH:
                 self.assertIsInstance(
                     e, event.BranchEvent, f"{e} is not a condition event"
                 )
-                self.assertEqual(e.file, access, f"{e} has not correct file")
+                self.assertEqual(self.ACCESS, e.file, f"{e} has not correct file")
                 self.assertEqual(
-                    e.line, branch_lines[branch_i], f"{e} has not correct line"
+                    branch_lines[branch_i], e.line, f"{e} has not correct line"
                 )
                 if first_branch:
                     self.assertGreater(
@@ -79,15 +72,15 @@ class EventTests(unittest.TestCase):
     @staticmethod
     def _test_events(events):
         config = Config.config(
-            path=os.path.join(test_resources, "test_events"),
+            path=os.path.join(BaseTest.TEST_RESOURCES, "test_events"),
             language="python",
             events=events,
-            working=test_dir,
+            working=BaseTest.TEST_DIR,
         )
         instrument_config(config)
 
-        subprocess.run([python, access], cwd=test_dir)
-        return event.load(os.path.join(test_dir, test_path))
+        subprocess.run([BaseTest.PYTHON, BaseTest.ACCESS], cwd=BaseTest.TEST_DIR)
+        return event.load(os.path.join(BaseTest.TEST_DIR, BaseTest.TEST_PATH))
 
     def test_function(self):
         events = self._test_events("function_enter,function_exit")
@@ -113,7 +106,7 @@ class EventTests(unittest.TestCase):
                 self.assertIsInstance(
                     e, event.FunctionEnterEvent, f"{e} is not a line event"
                 )
-                self.assertEqual(access, e.file, f"{e} has not correct file")
+                self.assertEqual(BaseTest.ACCESS, e.file, f"{e} has not correct file")
                 self.assertEqual(line, e.line, f"{e} has not correct line")
                 self.assertEqual(function, e.function, f"{e} has not correct function")
                 function_enter_i += 1
@@ -122,7 +115,7 @@ class EventTests(unittest.TestCase):
                 self.assertIsInstance(
                     e, event.FunctionExitEvent, f"{e} is not a line event"
                 )
-                self.assertEqual(access, e.file, f"{e} has not correct file")
+                self.assertEqual(BaseTest.ACCESS, e.file, f"{e} has not correct file")
                 self.assertEqual(line, e.line, f"{e} has not correct line")
                 self.assertEqual(function, e.function, f"{e} has not correct function")
                 self.assertEqual(value, e.return_value, f"{e} has not correct function")
@@ -142,7 +135,7 @@ class EventTests(unittest.TestCase):
             if e.event_type == event.EventType.BRANCH:
                 line, mod = branches[branches_i]
                 self.assertIsInstance(e, event.BranchEvent, f"{e} is not a line event")
-                self.assertEqual(access, e.file, f"{e} has not correct file")
+                self.assertEqual(BaseTest.ACCESS, e.file, f"{e} has not correct file")
                 self.assertEqual(line, e.line, f"{e} has not correct line")
                 if mod < 0:
                     self.assertLess(
@@ -182,7 +175,7 @@ class EventTests(unittest.TestCase):
                 event.event_mapping[type_],
                 f"{e} is not a {event.event_mapping[type_]}",
             )
-            self.assertEqual(access, e.file, f"{e} has not correct file")
+            self.assertEqual(BaseTest.ACCESS, e.file, f"{e} has not correct file")
             self.assertEqual(line, e.line, f"{e} has not correct line")
             self.assertEqual(0, e.loop_id, f"{e} has not correct loop id")
 
@@ -230,7 +223,7 @@ class EventTests(unittest.TestCase):
                 event.event_mapping[type_],
                 f"{e} is not a {event.event_mapping[type_]}",
             )
-            self.assertEqual(access, e.file, f"{e} has not correct file")
+            self.assertEqual(BaseTest.ACCESS, e.file, f"{e} has not correct file")
             self.assertEqual(line, e.line, f"{e} has not correct line")
             if isinstance(var, list):
                 self.assertIn(e.var, var, f"{e} has not correct var")
@@ -258,7 +251,7 @@ class EventTests(unittest.TestCase):
                 event.event_mapping[type_],
                 f"{e} is not a {event.event_mapping[type_]}",
             )
-            self.assertEqual(access, e.file, f"{e} has not correct file")
+            self.assertEqual(BaseTest.ACCESS, e.file, f"{e} has not correct file")
             self.assertEqual(line, e.line, f"{e} has not correct line")
             self.assertEqual(ev, e.value, f"{e} has not correct value")
             self.assertEqual(exp, e.condition, f"{e} has not correct condition")
