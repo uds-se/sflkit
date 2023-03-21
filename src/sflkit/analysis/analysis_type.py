@@ -59,21 +59,27 @@ class AnalysisObject(object):
         self.finalize(passed, failed)
         self.calculate()
 
+    @abstractmethod
     def calculate(self):
         pass
 
+    @abstractmethod
     def finalize(self, passed: List, failed: List):
         pass
 
+    @abstractmethod
     def hit(self, id_, event, scope_: Scope = None):
         pass
 
+    @abstractmethod
     def get_suggestions(self):
         pass
 
+    @abstractmethod
     def assign_suspiciousness(self):
         pass
 
+    @abstractmethod
     def evaluate(self, failed: bool = False, res: bool = False):
         pass
 
@@ -82,6 +88,7 @@ class AnalysisObject(object):
         return any(map(lambda e: isinstance(event, e), events))
 
     @staticmethod
+    @abstractmethod
     def events() -> List[Type]:
         return list()
 
