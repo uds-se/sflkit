@@ -1,7 +1,10 @@
+import unittest
+
 from parameterized import parameterized
 
 from sflkit.analysis import similarity
 from sflkit.analysis.spectra import Line
+from sflkit.events.event import LineEvent
 from utils import BaseTest
 
 
@@ -84,4 +87,43 @@ class TestSimilarityCoefficient(BaseTest):
             ),
             msg=f"The results for {metric} do not match",
             delta=self.delta,
+        )
+
+
+class TestComparison(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        line_1 = Line(LineEvent("main.py", 1, 0))
+        line_2 = Line(LineEvent("main.py", 2, 0))
+        line_1.suspiciousness = 1
+        line_2.suspiciousness = 2
+        cls.line_1 = line_1
+        cls.line_2 = line_2
+
+    @parameterized.expand(
+        [
+            ("__gt__", True, False, 0, 1),
+            ("__lt__", False, True, 2, 1),
+            ("__ge__", True, False, 1, 2),
+            ("__le__", False, True, 1, 0),
+        ]
+    )
+    def test_op(self, op, gt, lt, t1, f1):
+        self.assertEqual(
+            gt,
+            getattr(self.line_2, op)(self.line_1),
+            f"{op} provides wrong result for line_2.{op}(line_1)",
+        )
+        self.assertEqual(
+            lt,
+            getattr(self.line_1, op)(self.line_2),
+            f"{op} provides wrong result for line_1.{op}(line_2)",
+        )
+        self.assertTrue(
+            getattr(self.line_1, op)(t1),
+            f"{op} provides wrong result if line_1.{op}({t1})",
+        )
+        self.assertFalse(
+            getattr(self.line_1, op)(f1),
+            f"{op} provides wrong result if line_1.{op}({f1})",
         )

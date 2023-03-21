@@ -1,4 +1,5 @@
 import enum
+import numbers
 from abc import abstractmethod
 from typing import List, Type
 
@@ -42,7 +43,7 @@ class AnalysisObject(object):
 
     # noinspection PyUnusedLocal
     def __init__(self, event):
-        self.suspiciousness = 0
+        self.suspiciousness: float = 0
 
     def __repr__(self):
         return f"{self.analysis_type()}:{self.suspiciousness}"
@@ -95,23 +96,31 @@ class AnalysisObject(object):
     def __gt__(self, other):
         if hasattr(other, "suspiciousness"):
             return self.suspiciousness > other.suspiciousness
+        elif isinstance(other, (int, float)):
+            return self.suspiciousness > other
         else:
             raise TypeError(f"> supported between {type(self)} and {type(other)}")
 
     def __lt__(self, other):
         if hasattr(other, "suspiciousness"):
             return self.suspiciousness < other.suspiciousness
+        elif isinstance(other, (int, float)):
+            return self.suspiciousness < other
         else:
             raise TypeError(f"< supported between {type(self)} and {type(other)}")
 
     def __ge__(self, other):
         if hasattr(other, "suspiciousness"):
             return self.suspiciousness >= other.suspiciousness
+        elif isinstance(other, (int, float)):
+            return self.suspiciousness >= other
         else:
             raise TypeError(f">= supported between {type(self)} and {type(other)}")
 
     def __le__(self, other):
         if hasattr(other, "suspiciousness"):
-            return self.suspiciousness > other.suspiciousness
+            return self.suspiciousness <= other.suspiciousness
+        elif isinstance(other, (int, float)):
+            return self.suspiciousness <= other
         else:
             raise TypeError(f"<= supported between {type(self)} and {type(other)}")
