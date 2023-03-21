@@ -17,7 +17,7 @@ You need to navigate to the root directory of SFLKit and run
 ```sh
 pip install .
 ```
-If you have a separate Python 2 and Python 3 on your machine  you may need to run
+If you have a separate Python 2 and Python 3 on your machine you may need to run
 ```sh
 pip3 install .
 ```
