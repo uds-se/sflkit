@@ -1,6 +1,7 @@
 # SFLKit: A Workbench for Statistical Fault Localization
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/uds-se/sflkit/test-sflkit.yml?branch=main)](https://img.shields.io/github/actions/workflow/status/uds-se/sflkit/test-sflkit.yml?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/uds-se/sflkit/badge.svg?branch=main)](https://coveralls.io/github/uds-se/sflkit?branch=main)
 [![Dependencies](https://img.shields.io/librariesio/release/github/uds-se/sflkit)](https://libraries.io/github/uds-se/sflkit)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
