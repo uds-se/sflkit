@@ -1,4 +1,5 @@
 import random
+from abc import ABC
 from typing import List, Type, Any
 
 from sflkit.events.event import Event
@@ -65,7 +66,7 @@ class TmpGenerator:
         return var
 
 
-class MetaVisitor:
+class MetaVisitor(ABC):
     def __init__(
         self, language, id_generator: IDGenerator, tmp_generator: TmpGenerator
     ):

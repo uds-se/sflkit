@@ -1,4 +1,5 @@
 import logging
+from abc import abstractmethod
 
 from sflkit.language.meta import MetaVisitor
 
@@ -9,12 +10,15 @@ class ASTVisitor:
         self.file = None
         self.events = list()
 
+    @abstractmethod
     def parse(self, source: str):
         pass
 
+    @abstractmethod
     def unparse(self, ast) -> str:
         pass
 
+    @abstractmethod
     def start_visit(self, ast):
         pass
 

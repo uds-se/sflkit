@@ -780,14 +780,20 @@ class ConditionEventFactory(PythonEventFactory):
         return "add_condition_event"
 
     def get_event_call(self, event: ConditionEvent):
-        return get_call(
+        call = get_call(
             self.get_function(),
             event.file,
             event.line,
             event.id_,
-            event.tmp_var,
             event.condition,
         )
+        assert isinstance(call.value, Call)
+        call.value.args.append(
+            Name(
+                id=event.tmp_var,
+            )
+        )
+        return call
 
     def visit_condition(self, node: typing.Union[If, While]) -> Injection:
         self.condition_extract.setup(self)

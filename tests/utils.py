@@ -5,6 +5,7 @@ import unittest
 from typing import List
 
 from sflkit import instrument_config, Analyzer, Config
+from sflkit.events import event
 from sflkit.model import EventFile
 
 
@@ -22,6 +23,32 @@ class BaseTest(unittest.TestCase):
     TEST_PROPERTIES = "test_properties"
     TEST_SPECIAL_VALUES = "test_special_values"
     DELTA = 0.0000001
+
+    EVENTS = [
+        event.LineEvent("main.py", 1, 0),
+        event.BranchEvent("main.py", 1, 1, 0, 1),
+        event.BranchEvent("main.py", 1, 2, 1, 0),
+        event.FunctionEnterEvent("main.py", 1, 3, 0, "main"),
+        event.FunctionExitEvent("main.py", 1, 4, 0, "main", 1, "int", "x"),
+        event.FunctionExitEvent("main.py", 1, 5, 0, "main", True, "bool", "x"),
+        event.FunctionExitEvent("main.py", 1, 6, 0, "main", False, "bool", "x"),
+        event.FunctionExitEvent("main.py", 1, 7, 0, "main", None, "none", "x"),
+        event.FunctionExitEvent("main.py", 1, 8, 0, "main", [], "list", "x"),
+        event.FunctionExitEvent("main.py", 1, 9, 0, "main", [1], "list", "x"),
+        event.FunctionErrorEvent("main.py", 1, 10, 0, "main"),
+        event.DefEvent("main.py", 1, 11, "x", 0, 1, "int"),
+        event.DefEvent("main.py", 1, 12, "x", 0, True, "bool"),
+        event.DefEvent("main.py", 1, 13, "x", 0, False, "bool"),
+        event.DefEvent("main.py", 1, 14, "x", 0, None, "none"),
+        event.DefEvent("main.py", 1, 15, "x", 0, [], "list"),
+        event.DefEvent("main.py", 1, 16, "x", 0, [1], "list"),
+        event.UseEvent("main.py", 1, 17, "x", 0),
+        event.ConditionEvent("main.py", 1, 18, "x < y", True, "x"),
+        event.ConditionEvent("main.py", 1, 19, "x < y", False, "x"),
+        event.LoopBeginEvent("main.py", 1, 20, 0),
+        event.LoopHitEvent("main.py", 1, 21, 0),
+        event.LoopEndEvent("main.py", 1, 22, 0),
+    ]
 
     @staticmethod
     def execute_subject(test: List[str], count: int):

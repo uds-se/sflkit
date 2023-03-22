@@ -125,6 +125,7 @@ def add_function_exit_event(
             ).dump()
         )
     else:
+        # noinspection PyBroadException
         try:
             _event_path_writer.writerow(
                 event.FunctionExitEvent(
@@ -137,7 +138,7 @@ def add_function_exit_event(
                     type_.__name__,
                 ).dump()
             )
-        except BaseException:
+        except:
             _event_path_writer.writerow(
                 event.FunctionExitEvent(
                     file, line, id_, function_id, function, None, type_.__name__
@@ -153,7 +154,7 @@ def add_function_error_event(
     )
 
 
-def add_condition_event(file: str, line: int, id_: int, value: Any, condition: str):
+def add_condition_event(file: str, line: int, id_: int, condition: str, value: Any):
     if value:
         _event_path_writer.writerow(
             event.ConditionEvent(file, line, id_, condition, True).dump()

@@ -1,15 +1,17 @@
 import json
+from abc import abstractmethod
 from typing import List
 
 from sflkit.events import event
 from sflkit.language.visitor import ASTVisitor
 
 
-class Instrumentation(object):
+class Instrumentation:
     def __init__(self, visitor: ASTVisitor):
         self.visitor = visitor
         self.events = list()
 
+    @abstractmethod
     def instrument(
         self, src: str, dst: str, suffixes: List[str] = None, file: str = ""
     ):

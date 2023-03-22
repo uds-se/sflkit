@@ -13,7 +13,9 @@ def a(b, c):  # defs: 2, uses: 0
     return d.b  # defs: 0, uses: 1
 
 
-if a(4, 5) and a(1, 1):
+if a(0, 0):
+    print("fallback")
+elif a(4, 5) and a(1, 1):
     print("passed")
 else:
     print("failed")

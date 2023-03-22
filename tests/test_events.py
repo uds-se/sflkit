@@ -86,19 +86,45 @@ class EventTests(BaseTest):
 
     def test_function(self):
         events = self._test_events("function_enter,function_exit")
-        self.assertEqual(20, len(events))
+        self.assertEqual(24, len(events))
         function_enter = list(
             zip(
-                [9, 2, 5, 5, 5, 5, 5, 9, 2, 5],
-                ["a", "__init__", "a", "a", "a", "a", "a", "a", "__init__", "a"],
+                [9, 2, 9, 2, 5, 5, 5, 5, 5, 9, 2, 5],
+                [
+                    "a",
+                    "__init__",
+                    "a",
+                    "__init__",
+                    "a",
+                    "a",
+                    "a",
+                    "a",
+                    "a",
+                    "a",
+                    "__init__",
+                    "a",
+                ],
             )
         )
         function_enter_i = 0
         function_exit = list(
             zip(
-                [2, 6, 6, 6, 6, 6, 13, 2, 6, 13],
-                ["__init__", "a", "a", "a", "a", "a", "a", "__init__", "a", "a"],
-                [None, 8, 12, 16, 20, 24, 24, None, 2, 2],
+                [2, 13, 2, 6, 6, 6, 6, 6, 13, 2, 6, 13],
+                [
+                    "__init__",
+                    "a",
+                    "__init__",
+                    "a",
+                    "a",
+                    "a",
+                    "a",
+                    "a",
+                    "a",
+                    "__init__",
+                    "a",
+                    "a",
+                ],
+                [None, 0, None, 8, 12, 16, 20, 24, 24, None, 2, 2],
             )
         )
         function_exit_i = 0
@@ -125,11 +151,11 @@ class EventTests(BaseTest):
 
     def test_branch(self):
         events = self._test_events("branch")
-        self.assertEqual(10, len(events))
+        self.assertEqual(12, len(events))
         branches = list(
             zip(
-                [11, 11, 11, 11, 11, 11, 11, 11, 16, 23],
-                [-1, -1, -1, -1, -1, 1, -1, 1, -1, 0],
+                [11, 16, 11, 11, 11, 11, 11, 11, 11, 11, 18, 25],
+                [1, 1, -1, -1, -1, -1, -1, 1, -1, 1, -1, 0],
             )
         )
         branches_i = 0
@@ -141,11 +167,15 @@ class EventTests(BaseTest):
                 self.assertEqual(line, e.line, f"{e} has not correct line")
                 if mod < 0:
                     self.assertLess(
-                        e.then_id, e.else_id, f"{e} has not correct branch ids"
+                        e.then_id,
+                        e.else_id,
+                        f"{e} has not correct branch ids",
                     )
                 elif mod > 0:
                     self.assertGreater(
-                        e.then_id, e.else_id, f"{e} has not correct branch ids"
+                        e.then_id,
+                        e.else_id,
+                        f"{e} has not correct branch ids",
                     )
                 else:
                     self.assertEqual(-1, e.else_id, f"{e} has not correct branch ids")
@@ -156,8 +186,10 @@ class EventTests(BaseTest):
 
     def test_loop(self):
         events = self._test_events("loop_begin,loop_hit,loop_end")
-        self.assertEqual(10, len(events))
+        self.assertEqual(12, len(events))
         expected_loop = [
+            (event.EventType.LOOP_BEGIN, 11),
+            (event.EventType.LOOP_END, 11),
             (event.EventType.LOOP_BEGIN, 11),
             (event.EventType.LOOP_HIT, 11),
             (event.EventType.LOOP_HIT, 11),
@@ -171,7 +203,7 @@ class EventTests(BaseTest):
         ]
         for e, expected in zip(events, expected_loop):
             type_, line = expected
-            self.assertEqual(e.event_type, type_, f"{e} is not of type {type_}")
+            self.assertEqual(type_, e.event_type, f"{e} is not of type {type_}")
             self.assertIsInstance(
                 e,
                 event.event_mapping[type_],
@@ -215,7 +247,7 @@ class EventTests(BaseTest):
                 ]
             )
 
-        expected_def_uses = get_a(4, 5, 24) + get_a(1, 1, 2)
+        expected_def_uses = get_a(0, 0, 0) + get_a(4, 5, 24) + get_a(1, 1, 2)
         self.assertEqual(len(expected_def_uses), len(events))  # defs + uses
         for e, expected in zip(events, expected_def_uses):
             type_, line, var, val = expected
@@ -239,14 +271,15 @@ class EventTests(BaseTest):
 
     def test_condition(self):
         events = self._test_events("condition")
-        self.assertEqual(3, len(events))
+        self.assertEqual(4, len(events))
         expected_conditions = [
-            (event.EventType.CONDITION, 16, True, "a(4, 5)"),
-            (event.EventType.CONDITION, 16, True, "a(1, 1)"),
-            (event.EventType.CONDITION, 16, True, "a(4, 5) and a(1, 1)"),
+            (event.EventType.CONDITION, 16, "a(0, 0)", False),
+            (event.EventType.CONDITION, 18, "a(4, 5)", True),
+            (event.EventType.CONDITION, 18, "a(1, 1)", True),
+            (event.EventType.CONDITION, 18, "a(4, 5) and a(1, 1)", True),
         ]
         for e, expected in zip(events, expected_conditions):
-            type_, line, ev, exp = expected
+            type_, line, exp, ev = expected
             self.assertEqual(e.event_type, type_, f"{e} is not of type {type_}")
             self.assertIsInstance(
                 e,
@@ -260,32 +293,11 @@ class EventTests(BaseTest):
 
 
 class SerializeEventsTest(BaseTest):
-    EVENTS = [
-        event.LineEvent("main.py", 1, 0),
-        event.BranchEvent("main.py", 1, 1, 0, 1),
-        event.BranchEvent("main.py", 1, 2, 1, 0),
-        event.FunctionEnterEvent("main.py", 1, 3, 0, "main"),
-        event.FunctionExitEvent("main.py", 1, 4, 0, "main", 1, "int", "x"),
-        event.FunctionExitEvent("main.py", 1, 5, 0, "main", True, "bool", "x"),
-        event.FunctionExitEvent("main.py", 1, 6, 0, "main", False, "bool", "x"),
-        event.FunctionExitEvent("main.py", 1, 7, 0, "main", None, "int", "x"),
-        event.FunctionErrorEvent("main.py", 1, 8, 0, "main"),
-        event.DefEvent("main.py", 1, 9, "x", 0, 1, "int"),
-        event.DefEvent("main.py", 1, 10, "x", 0, True, "bool"),
-        event.DefEvent("main.py", 1, 11, "x", 0, False, "bool"),
-        event.DefEvent("main.py", 1, 12, "x", 0, None, "int"),
-        event.UseEvent("main.py", 1, 13, "x", 0),
-        event.ConditionEvent("main.py", 1, 14, "x < y", True, "x"),
-        event.LoopBeginEvent("main.py", 1, 15, 0),
-        event.LoopHitEvent("main.py", 1, 16, 0),
-        event.LoopEndEvent("main.py", 1, 17, 0),
-    ]
-
-    @parameterized.expand(map(lambda x: (str(x), x), EVENTS))
+    @parameterized.expand(map(lambda x: (str(x), x), BaseTest.EVENTS))
     def test_serialize(self, _, e):
         self.assertEqual(e, event.deserialize(event.serialize(e)))
 
-    @parameterized.expand(map(lambda x: (str(x), x), EVENTS))
+    @parameterized.expand(map(lambda x: (str(x), x), BaseTest.EVENTS))
     def test_load(self, _, e):
         args = e.dump()[1:]
         if e.event_type == event.EventType.FUNCTION_EXIT:
