@@ -21,6 +21,8 @@ class TestCli(BaseTest):
             failing=os.path.join("test_dir", "EVENTS_PATH_0"),
             working=BaseTest.TEST_DIR,
         )
+        print(config.failing)
+        print(config.passing)
         Config.write(config, self.config_path)
 
     def tearDown(self) -> None:

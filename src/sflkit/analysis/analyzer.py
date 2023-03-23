@@ -22,7 +22,6 @@ class Analyzer(object):
         self.model.prepare(event_file)
         with event_file:
             for event in event_file.load():
-                print(event)
                 event.handle(self.model)
 
     def _finalize(self):
@@ -30,7 +29,6 @@ class Analyzer(object):
 
     def analyze(self):
         for event_file in self.relevant_event_files + self.irrelevant_event_files:
-            print(event_file)
             self._analyze(event_file)
         self._finalize()
 
@@ -53,11 +51,9 @@ class Analyzer(object):
         else:
             objects = self.get_analysis()
         suggestions = dict()
-        print(objects)
         for suggestion in map(
             lambda p: p.get_suggestion(metric=metric, base_dir=base_dir), objects
         ):
-            print(suggestion)
             if suggestion.suspiciousness not in suggestions:
                 suggestions[suggestion.suspiciousness] = set(suggestion.lines)
             else:
