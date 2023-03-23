@@ -51,6 +51,7 @@ class Analyzer(object):
         else:
             objects = self.get_analysis()
         suggestions = dict()
+        print(objects)
         for suggestion in map(
             lambda p: p.get_suggestion(metric=metric, base_dir=base_dir), objects
         ):
