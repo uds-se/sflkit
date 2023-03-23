@@ -321,6 +321,28 @@ class DefEventFactory(PythonEventFactory):
     def visit_AsyncFor(self, node: AsyncFor) -> Injection:
         return self.visit_for(node)
 
+    def visit_with(self, node: With | AsyncWith):
+        def_events = list()
+        for item in node.items:
+            if item.optional_vars:
+                for var in self.variable_extract.visit(item.optional_vars):
+                    def_events.append(
+                        DefEvent(
+                            self.file, node.lineno, self.id_generator.get_next_id(), var
+                        )
+                    )
+        if def_events:
+            return Injection(
+                body=[self.get_event_call(e) for e in def_events], events=def_events
+            )
+        return Injection()
+
+    def visit_With(self, node: With) -> Injection:
+        return self.visit_with(node)
+
+    def visit_AsyncWith(self, node: AsyncWith) -> Injection:
+        return self.visit_with(node)
+
 
 class FunctionEventFactory(PythonEventFactory):
     functions: typing.Dict[AST, int] = dict()

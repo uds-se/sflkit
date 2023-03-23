@@ -67,3 +67,6 @@ except ValueError:
 m: int
 m: int = 1
 m += 1
+
+if m:
+    print(m)

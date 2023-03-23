@@ -540,10 +540,16 @@ def load_event(event_type: EventType, *args):
         return event_mapping[event_type](args[0], int(args[1]), int(args[2]))
 
 
-def load(path):
+def load(path) -> List[Event]:
     events = list()
     with open(path, "r") as fp:
         reader = csv.reader(fp)
         for row in reader:
             events.append(load_event(EventType(int(row[0])), *row[1:]))
     return events
+
+
+def load_json(path) -> List[Event]:
+    with open(path, "r") as fp:
+        events = json.load(fp)
+    return list(map(deserialize, events))
