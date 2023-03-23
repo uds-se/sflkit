@@ -140,9 +140,6 @@ class Config:
                         False,
                     )
                 if "failing" in events:
-                    print(events["failing"])
-                    print(list(csv.reader([events["failing"]])))
-                    print(list(csv.reader([events["failing"]]))[0])
                     self.failing = self.get_event_files(
                         list(csv.reader([events["failing"]]))[0], run_id_generator, True
                     )
@@ -199,7 +196,6 @@ class Config:
 
     @staticmethod
     def get_event_files(files, run_id_generator, failing):
-        print(files)
         file_queue = queue.Queue()
         for f in files:
             file_queue.put(f)
@@ -216,6 +212,10 @@ class Config:
                             element, run_id_generator.get_next_id(), failing=failing
                         )
                     )
+            else:
+                result.append(
+                    EventFile(element, run_id_generator.get_next_id(), failing=failing)
+                )
         return result
 
     @staticmethod
