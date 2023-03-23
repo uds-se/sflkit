@@ -140,10 +140,10 @@ class Config:
                         False,
                     )
                 if "failing" in events:
-                    print(events["failing"])
                     self.failing = self.get_event_files(
                         list(csv.reader([events["failing"]]))[0], run_id_generator, True
                     )
+                print(self.failing)
 
                 # instrumentation section
                 instrument = config["instrumentation"]
@@ -229,7 +229,6 @@ class Config:
         exclude=None,
         runner=None,
     ):
-        print(failing)
         conf = configparser.ConfigParser()
         conf["target"] = dict()
         conf["events"] = dict()
