@@ -140,11 +140,12 @@ class Config:
                         False,
                     )
                 if "failing" in events:
+                    print(events["failing"])
+                    print(list(csv.reader([events["failing"]])))
+                    print(list(csv.reader([events["failing"]]))[0])
                     self.failing = self.get_event_files(
                         list(csv.reader([events["failing"]]))[0], run_id_generator, True
                     )
-                print(self.failing)
-
                 # instrumentation section
                 instrument = config["instrumentation"]
                 if "exclude" in instrument:
@@ -198,6 +199,7 @@ class Config:
 
     @staticmethod
     def get_event_files(files, run_id_generator, failing):
+        print(files)
         file_queue = queue.Queue()
         for f in files:
             file_queue.put(f)
