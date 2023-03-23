@@ -23,7 +23,7 @@ jobs:
       run: |
         sudo apt-get update && sudo apt-get install -y python3-dev
         pip install --upgrade pip
-        pip install -e .[dev,test]
+        pip install -e .[test]
     - name: Test with pytest
       run: |
         python3 -m pytest --html=report.html --self-contained-html --cov-report xml:coverage.xml --cov-report term --cov-config=.coveragerc --cov=sflkit tests/
