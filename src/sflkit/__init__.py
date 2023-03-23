@@ -19,7 +19,6 @@ def instrument_config(conf: Config, event_dump: str = None):
 
 
 def instrument(config_path: str, event_dump: str = None):
-    print("instrument")
     conf = Config(config_path)
     instrument_config(conf, event_dump)
 
@@ -45,7 +44,6 @@ def analyze_config(conf: Config, analysis_dump: str = None):
 
 
 def analyze(config_path: str, analysis_dump: str = None):
-    print("analyze")
     conf = Config(config_path)
     return analyze_config(conf, analysis_dump)
 

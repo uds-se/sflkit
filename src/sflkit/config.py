@@ -278,10 +278,8 @@ class Config:
         if self.metrics:
             config["events"]["metrics"] = ",".join(m.__name__ for m in self.metrics)
         if self.passing:
-            print("passing")
             config["events"]["passing"] = ",".join(e.path for e in self.passing)
         if self.failing:
-            print("failing")
             config["events"]["failing"] = ",".join(e.path for e in self.failing)
         if self.instrument_working:
             config["instrumentation"]["path"] = self.instrument_working
