@@ -140,6 +140,7 @@ class Config:
                         False,
                     )
                 if "failing" in events:
+                    print(events["failing"])
                     self.failing = self.get_event_files(
                         list(csv.reader([events["failing"]]))[0], run_id_generator, True
                     )
@@ -162,7 +163,7 @@ class Config:
                 raise ConfigError(e)
 
     @staticmethod
-    def create_config(
+    def create_from_values(
         target_path: str = None,
         language: Language = None,
         predicates: List[AnalysisType] = None,
@@ -216,7 +217,7 @@ class Config:
         return result
 
     @staticmethod
-    def config(
+    def create(
         path=None,
         language=None,
         events=None,
@@ -228,34 +229,35 @@ class Config:
         exclude=None,
         runner=None,
     ):
-        config = configparser.ConfigParser()
-        config["target"] = dict()
-        config["events"] = dict()
-        config["instrumentation"] = dict()
-        config["test"] = dict()
+        print(failing)
+        conf = configparser.ConfigParser()
+        conf["target"] = dict()
+        conf["events"] = dict()
+        conf["instrumentation"] = dict()
+        conf["test"] = dict()
 
         if path:
-            config["target"]["path"] = path
+            conf["target"]["path"] = path
         if language:
-            config["target"]["language"] = language
+            conf["target"]["language"] = language
         if events:
-            config["events"]["events"] = events
+            conf["events"]["events"] = events
         if predicates:
-            config["events"]["predicates"] = predicates
+            conf["events"]["predicates"] = predicates
         if metrics:
-            config["events"]["metrics"] = metrics
+            conf["events"]["metrics"] = metrics
         if passing:
-            config["events"]["passing"] = passing
+            conf["events"]["passing"] = passing
         if failing:
-            config["events"]["failing"] = failing
+            conf["events"]["failing"] = failing
         if working:
-            config["instrumentation"]["path"] = working
+            conf["instrumentation"]["path"] = working
         if exclude:
-            config["instrumentation"]["exclude"] = exclude
+            conf["instrumentation"]["exclude"] = exclude
         if runner:
-            config["test"]["runner"] = runner
+            conf["test"]["runner"] = runner
 
-        return Config(config)
+        return Config(conf)
 
     def write(self, path):
         config = configparser.ConfigParser()

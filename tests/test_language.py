@@ -27,7 +27,7 @@ class LanguageTests(BaseTest):
         self.assertEqual(Language.PYTHON, Language.PYTHON3)
 
     def _instrument(self, events: List[EventType]) -> List[Event]:
-        config = Config.config(
+        config = Config.create(
             path=os.path.join(self.TEST_RESOURCES, "test_language"),
             language="python",
             events=",".join(e.name.lower() for e in events),

@@ -15,7 +15,7 @@ from utils import BaseTest
 
 class ConfigTests(unittest.TestCase):
     def test_config(self):
-        config = Config.config(
+        config = Config.create(
             path=os.path.join("test", "path"),
             language="Python",
             events="Line,Branch",
@@ -54,7 +54,7 @@ class ConfigTests(unittest.TestCase):
         self.assertIsNone(config.runner)
 
     def test_overwrite_predicates(self):
-        config = Config.config(
+        config = Config.create(
             path=os.path.join("test", "path"),
             language="Python",
             events="Line,Branch",
@@ -77,14 +77,14 @@ class ConfigTests(unittest.TestCase):
         self.assertIsNone(config.runner)
 
     def test_create_config(self):
-        config = Config.config(
+        config = Config.create(
             path=os.path.join("test", "path"),
             language="Python",
             events="Line,Branch",
             working=os.path.join("instrumentation", "path"),
             exclude="test,test2",
         )
-        created_config = Config.create_config(
+        created_config = Config.create_from_values(
             config.target_path,
             config.language,
             config.predicates,
@@ -117,7 +117,7 @@ class ConfigTests(unittest.TestCase):
 class UtilizeConfigTest(BaseTest):
     def setUp(self) -> None:
         self.config_path = f"test_config_{abs(hash(self))}.ini"
-        config = Config.config(
+        config = Config.create(
             path=os.path.join(BaseTest.TEST_RESOURCES, self.TEST_LINES),
             language="python",
             events="line",

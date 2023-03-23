@@ -11,7 +11,7 @@ from utils import BaseTest
 
 class EventTests(BaseTest):
     def test_lines(self):
-        config = Config.config(
+        config = Config.create(
             path=os.path.join(self.TEST_RESOURCES, self.TEST_LINES),
             language="python",
             events="line",
@@ -29,7 +29,7 @@ class EventTests(BaseTest):
             self.assertEqual(i + 1, e.line, f"{e} has not correct line")
 
     def test_branches(self):
-        config = Config.config(
+        config = Config.create(
             path=os.path.join(self.TEST_RESOURCES, self.TEST_BRANCHES),
             language="python",
             events="line,branch",
@@ -73,7 +73,7 @@ class EventTests(BaseTest):
 
     @staticmethod
     def _test_events(events):
-        config = Config.config(
+        config = Config.create(
             path=os.path.join(BaseTest.TEST_RESOURCES, "test_events"),
             language="python",
             events=events,

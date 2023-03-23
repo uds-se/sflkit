@@ -13,7 +13,7 @@ class TestCli(BaseTest):
     def setUp(self) -> None:
         self.config_path = f"test_config_{abs(hash(self))}.ini"
         self.results_path = f"results_{abs(hash(self))}.json"
-        config = Config.config(
+        config = Config.create(
             path=os.path.join(BaseTest.TEST_RESOURCES, self.TEST_LINES),
             language="python",
             events="line",

@@ -65,7 +65,7 @@ class BaseTest(unittest.TestCase):
         relevant: List[List[str]] = None,
         irrelevant: List[List[str]] = None,
     ) -> Analyzer:
-        config = Config.config(
+        config = Config.create(
             path=os.path.join(BaseTest.TEST_RESOURCES, test),
             language="python",
             events=events,

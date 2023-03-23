@@ -8,7 +8,7 @@ from utils import BaseTest
 
 class EventTests(BaseTest):
     def test_properties(self):
-        config = Config.config(
+        config = Config.create(
             path=os.path.join(self.TEST_RESOURCES, self.TEST_PROPERTIES),
             language="python",
             events="use",
@@ -21,7 +21,7 @@ class EventTests(BaseTest):
         self.assertEqual(0, p.returncode)
 
     def test_undefined_use(self):
-        config = Config.config(
+        config = Config.create(
             path=os.path.join(self.TEST_RESOURCES, "test_undefined_use"),
             language="python",
             events="use",
@@ -34,7 +34,7 @@ class EventTests(BaseTest):
         self.assertEqual(0, p.returncode)
 
     def test_doc(self):
-        config = Config.config(
+        config = Config.create(
             path=os.path.join(self.TEST_RESOURCES, "test_doc"),
             language="python",
             events="line",

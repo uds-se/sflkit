@@ -11,7 +11,7 @@ from utils import BaseTest
 
 class TestInstrumentation(BaseTest):
     def test_complex_structure(self):
-        config = Config.config(
+        config = Config.create(
             path=os.path.join(BaseTest.TEST_RESOURCES, "test_instrumentation"),
             language="python",
             events="line",
