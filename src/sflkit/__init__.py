@@ -44,6 +44,8 @@ def analyze_config(conf: Config, analysis_dump: str = None):
 
 
 def analyze(config_path: str, analysis_dump: str = None):
+    with open(config_path, "r") as fp:
+        print(fp.read())
     conf = Config(config_path)
     return analyze_config(conf, analysis_dump)
 
