@@ -22,6 +22,7 @@ class Analyzer(object):
         self.model.prepare(event_file)
         with event_file:
             for event in event_file.load():
+                print(event)
                 event.handle(self.model)
 
     def _finalize(self):
@@ -29,6 +30,7 @@ class Analyzer(object):
 
     def analyze(self):
         for event_file in self.relevant_event_files + self.irrelevant_event_files:
+            print(event_file)
             self._analyze(event_file)
         self._finalize()
 
