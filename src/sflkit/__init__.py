@@ -31,15 +31,15 @@ def analyze_config(conf: Config, analysis_dump: str = None):
     results = dict()
     for analysis_type in conf.predicates:
         results[analysis_type.name] = dict()
-        for metric in conf.metrics + [Predicate.IncreaseTrue, Predicate.IncreaseFalse]:
+        for metric in conf.metrics:
             try:
                 results[analysis_type.name][
                     metric.__name__
                 ] = analyzer.get_sorted_suggestions(
                     conf.target_path, metric, analysis_type
                 )
-            except (AttributeError, ValueError, TypeError):
-                pass
+            except (AttributeError, ValueError, TypeError) as e:
+                raise e
     return results
 
 
