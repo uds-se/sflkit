@@ -512,7 +512,7 @@ class FunctionExitEventFactor(FunctionEventFactory):
         )
 
 
-class FunctionErrorEventFactor(FunctionEventFactory):
+class FunctionErrorEventFactory(FunctionEventFactory):
     def get_function(self):
         return "add_function_error_event"
 
@@ -748,11 +748,12 @@ class UseEventFactory(PythonEventFactory):
             return self.visit_use(node.value)
 
     def visit_AugAssign(self, node: AugAssign) -> Injection:
-        return self.visit_use(node.value)
+        return self.visit_use(node.target) + self.visit_use(node.value)
 
     def visit_loop(self, node: AST):
         injection = self.visit_use(node)
-        injection.body_last = injection.pre
+        if isinstance(node, While):
+            injection.body_last = injection.pre
         return injection
 
     def visit_For(self, node: For) -> Injection:
@@ -795,6 +796,12 @@ class UseEventFactory(PythonEventFactory):
 
     def visit_Expr(self, node: Expr) -> Injection:
         return self.visit_use(node.value)
+
+    def visit_Global(self, node: Global) -> Injection:
+        return self.visit_use(node)
+
+    def visit_Nonlocal(self, node: Nonlocal) -> Injection:
+        return self.visit_use(node)
 
 
 class ConditionEventFactory(PythonEventFactory):

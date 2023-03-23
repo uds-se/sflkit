@@ -1,6 +1,8 @@
 import ast
 from typing import Any, Union
 
+from sortedcollections import OrderedSet
+
 from sflkit.events.event import ConditionEvent
 from sflkit.language.extract import VariableExtract, ConditionExtract
 
@@ -40,61 +42,67 @@ class PythonVarExtract(ast.NodeVisitor, VariableExtract):
                             variables += self.visit(item)
                 elif isinstance(value, ast.AST):
                     variables += self.visit(value)
-        return set(variables)
+        return OrderedSet(variables)
 
     def visit_Attribute(self, node: ast.Attribute) -> Any:
         variables = self.visit(node.value)
         if isinstance(node.value, ast.Name):
-            return {
+            return (variables if self.use else {}) | OrderedSet(
                 f"{variable}.{node.attr}"
                 for variable in variables
                 if variable not in self.current_ignores
-            }
+            )
         else:
             return variables
 
     def visit_Tuple(self, node: ast.Tuple):
-        targets = set()
+        targets = OrderedSet()
         for target in node.elts:
             targets |= self.visit(target)
         return targets
 
     def visit_Name(self, node: ast.Name):
         if node.id == "_":
-            return set()
-        return {node.id}
+            return OrderedSet()
+        return OrderedSet({node.id})
 
     def visit_arguments(self, node: ast.arguments) -> Any:
-        return {value for arg in node.args for value in self.visit(arg)}
+        return OrderedSet(value for arg in node.args for value in self.visit(arg))
 
     def visit_arg(self, node: ast.arg):
-        return {node.arg}
+        return OrderedSet({node.arg})
 
     def visit_Starred(self, node: ast.Starred):
-        return {value for value in self.visit(node.value)}
+        return OrderedSet(value for value in self.visit(node.value))
 
     def visit_withitem(self, node: ast.withitem):
         if node.optional_vars is None:
-            return set()
+            return OrderedSet()
         return self.visit(node.optional_vars)
 
     def visit_alias(self, node: ast.alias):
         if node.asname is None:
-            return {node.name}
+            return OrderedSet({node.name})
         else:
-            return {node.asname}
+            return OrderedSet({node.asname})
 
     def visit_Subscript(self, node: ast.Subscript) -> Any:
         if self.use:
             return self.generic_visit(node)
         else:
-            return set()
+            return OrderedSet()
 
     def visit_keyword(self, node: ast.keyword) -> Any:
         return self.visit(node.value)
 
     def visit_Call(self, node: ast.Call) -> Any:
-        return {var for arg in node.args + node.keywords for var in self.visit(arg)}
+        variables = self.visit(node.func)
+        return (
+            OrderedSet(
+                var for arg in node.args + node.keywords for var in self.visit(arg)
+            )
+            | variables
+        )
 
     def visit_comprehension(self, node: ast.comprehension) -> Any:
         self.current_ignores |= self.visit(node.target)
@@ -126,6 +134,12 @@ class PythonVarExtract(ast.NodeVisitor, VariableExtract):
         variables = self.visit(node.body) - self.current_ignores
         self.exit_ignores()
         return variables
+
+    def visit_Global(self, node: ast.Global) -> Any:
+        return OrderedSet(node.names)
+
+    def visit_Nonlocal(self, node: ast.Nonlocal) -> Any:
+        return OrderedSet(node.names)
 
 
 class PythonConditionExtract(ast.NodeVisitor, ConditionExtract):
@@ -199,8 +213,9 @@ class PythonConditionExtract(ast.NodeVisitor, ConditionExtract):
             _, use_, assign, events = tmp_vars[-1]
             es += events
             variables = [use_]
-            for var_, use_, assign_ in reversed(tmp_vars[:-1]):
+            for var_, use_, assign_, events in reversed(tmp_vars[:-1]):
                 variables.append(use_)
+                es += events
                 assign = ast.Module(
                     body=[
                         assign_,
@@ -216,7 +231,7 @@ class PythonConditionExtract(ast.NodeVisitor, ConditionExtract):
             ),
             expression,
         )
-        es.append(e)
+        es += e
         return (
             final_var,
             final_use,
@@ -254,33 +269,3 @@ class PythonConditionExtract(ast.NodeVisitor, ConditionExtract):
 
     def visit_Expr(self, node: ast.Expr) -> Any:
         return self.visit(node.value)
-
-
-class FutureVisitor(ast.NodeVisitor):
-    def generic_visit(self, node: ast.AST) -> bool:
-        has_future = False
-        if node:
-            if isinstance(node, list):
-                for item in node:
-                    if isinstance(item, ast.AST):
-                        has_future |= self.visit(item)
-            for field, value in ast.iter_fields(node):
-                if isinstance(value, list):
-                    for item in value:
-                        if isinstance(item, ast.AST):
-                            has_future |= self.visit(item)
-                elif isinstance(value, ast.AST):
-                    has_future |= self.visit(value)
-        return has_future
-
-    @staticmethod
-    def _visit_import(node: Union[ast.Import, ast.ImportFrom]):
-        return any(alias.name == "__future__" for alias in node.names)
-
-    def visit_Import(self, node: ast.Import) -> Any:
-        return self._visit_import(node)
-
-    def visit_ImportFrom(self, node: ast.ImportFrom) -> Any:
-        if node.module == "__future__":
-            return True
-        return self._visit_import(node)

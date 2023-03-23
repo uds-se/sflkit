@@ -57,7 +57,7 @@ class Language(enum.Enum):
             EventType.LOOP_END: python_factory.LoopEndEventFactory,
             EventType.FUNCTION_ENTER: python_factory.FunctionEnterEventFactory,
             EventType.FUNCTION_EXIT: python_factory.FunctionExitEventFactor,
-            EventType.FUNCTION_ERROR: python_factory.FunctionEnterEventFactory,
+            EventType.FUNCTION_ERROR: python_factory.FunctionErrorEventFactory,
             EventType.CONDITION: python_factory.ConditionEventFactory,
         },
         PythonVarExtract(),

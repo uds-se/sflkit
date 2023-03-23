@@ -1,8 +1,7 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 
 
-class VariableExtract:
-    @abstractmethod
+class VariableExtract(ABC):
     def setup(self, factory):
         pass
 
@@ -11,8 +10,7 @@ class VariableExtract:
         pass
 
 
-class ConditionExtract:
-    @abstractmethod
+class ConditionExtract(ABC):
     def setup(self, factory):
         pass
 

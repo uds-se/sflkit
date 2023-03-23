@@ -211,6 +211,7 @@ class EventTests(BaseTest):
             )
             self.assertEqual(BaseTest.ACCESS, e.file, f"{e} has not correct file")
             self.assertEqual(line, e.line, f"{e} has not correct line")
+            # noinspection PyUnresolvedReferences
             self.assertEqual(0, e.loop_id, f"{e} has not correct loop id")
 
     def test_def_use(self):
@@ -219,55 +220,89 @@ class EventTests(BaseTest):
             # loop
             (event.EventType.DEF, 11, "i", None),
             (event.EventType.USE, 12, "b", None),
+            (event.EventType.USE, 12, "d", None),
+            (event.EventType.USE, 12, "d.a", None),
             # A.a
             (event.EventType.DEF, 5, "b", None),
-            (event.EventType.USE, 6, ["b", "self.b"], None),
-            (event.EventType.USE, 6, ["b", "self.b"], None),
+            (event.EventType.USE, 6, "self", None),
+            (event.EventType.USE, 6, "self.b", None),
+            (event.EventType.USE, 6, "b", None),
             (event.EventType.DEF, 12, "d.b", None),
-            (event.EventType.USE, 11, "c", None),
         ]
 
         def get_a(b, c, result):
             return (
                 [
                     # a
-                    (event.EventType.DEF, 9, ["b", "c"], [b, c]),
-                    (event.EventType.DEF, 9, ["b", "c"], [b, c]),
+                    (event.EventType.DEF, 9, "b", b),
+                    (event.EventType.DEF, 9, "c", c),
                     (event.EventType.USE, 10, "b", None),
+                    (event.EventType.USE, 10, "A", None),
                     # A.__init__
                     (event.EventType.DEF, 2, "b", b),
                     (event.EventType.USE, 3, "b", None),
                     (event.EventType.DEF, 3, "self.b", b),
                     (event.EventType.DEF, 10, "d", None),
                     (event.EventType.USE, 11, "c", None),
+                    (event.EventType.USE, 11, "range", None),
                 ]
                 + loop * c
                 + [
+                    (event.EventType.USE, 13, "d", result),
                     (event.EventType.USE, 13, "d.b", result),
                 ]
             )
 
-        expected_def_uses = get_a(0, 0, 0) + get_a(4, 5, 24) + get_a(1, 1, 2)
+        expected_def_uses = (
+            [(event.EventType.USE, 16, "a", None)]
+            + get_a(0, 0, 0)
+            + [
+                (event.EventType.USE, 18, "a", None),
+            ]
+            + get_a(4, 5, 24)
+            + get_a(1, 1, 2)
+            + [
+                (event.EventType.USE, 19, "print", None),
+                (event.EventType.USE, 24, "ValueError", None),
+                (event.EventType.USE, 26, "print", None),
+            ]
+        )
         self.assertEqual(len(expected_def_uses), len(events))  # defs + uses
         for e, expected in zip(events, expected_def_uses):
             type_, line, var, val = expected
-            self.assertEqual(type_, e.event_type, f"{e} is not of type {type_}")
+            self.assertEqual(
+                type_, e.event_type, f"{e} is not of type {type_}, expected {expected}"
+            )
             self.assertIsInstance(
                 e,
                 event.event_mapping[type_],
-                f"{e} is not a {event.event_mapping[type_]}",
+                f"{e} is not a {event.event_mapping[type_]}, expected {expected}",
             )
-            self.assertEqual(BaseTest.ACCESS, e.file, f"{e} has not correct file")
-            self.assertEqual(line, e.line, f"{e} has not correct line")
+            self.assertEqual(
+                BaseTest.ACCESS,
+                e.file,
+                f"{e} has not correct file, expected {expected}",
+            )
+            self.assertEqual(
+                line, e.line, f"{e} has not correct line, expected {expected}"
+            )
             if isinstance(var, list):
-                self.assertIn(e.var, var, f"{e} has not correct var")
+                self.assertIn(
+                    e.var, var, f"{e} has not correct var, expected {expected}"
+                )
             else:
-                self.assertEqual(var, e.var, f"{e} has not correct var")
+                self.assertEqual(
+                    var, e.var, f"{e} has not correct var, expected {expected}"
+                )
             if type_ == event.EventType.DEF and val:
                 if isinstance(val, list):
-                    self.assertIn(e.value, val, f"{e} has not correct value")
+                    self.assertIn(
+                        e.value, val, f"{e} has not correct value, expected {expected}"
+                    )
                 else:
-                    self.assertEqual(val, e.value, f"{e} has not correct value")
+                    self.assertEqual(
+                        val, e.value, f"{e} has not correct value, expected {expected}"
+                    )
 
     def test_condition(self):
         events = self._test_events("condition")

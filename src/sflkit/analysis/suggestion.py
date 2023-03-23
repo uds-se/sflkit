@@ -48,3 +48,6 @@ class Suggestion(object):
 
     def __ge__(self, other):
         return other <= self.suspiciousness
+
+    def __len__(self):
+        return len(self.lines)

@@ -193,6 +193,7 @@ class Config:
         conf.instrument_exclude = instrument_exclude if instrument_exclude else list()
         conf.instrument_working = instrument_working
         conf.runner = runner
+        return conf
 
     @staticmethod
     def get_event_files(files, run_id_generator, failing):
@@ -256,6 +257,41 @@ class Config:
 
         return Config(config)
 
+    def write(self, path):
+        config = configparser.ConfigParser()
+        config["target"] = dict()
+        config["events"] = dict()
+        config["instrumentation"] = dict()
+        config["test"] = dict()
+
+        if self.target_path:
+            config["target"]["path"] = self.target_path
+        if self.language:
+            config["target"]["language"] = self.language.name
+        if self.events:
+            config["events"]["events"] = ",".join(e.name for e in self.events)
+        if self.predicates:
+            config["events"]["predicates"] = ",".join(p.name for p in self.predicates)
+        if self.metrics:
+            config["events"]["metrics"] = ",".join(m.__name__ for m in self.metrics)
+        if self.passing:
+            config["events"]["passing"] = ",".join(e.path for e in self.passing)
+        if self.failing:
+            config["events"]["failing"] = ",".join(e.path for e in self.failing)
+        if self.instrument_working:
+            config["instrumentation"]["path"] = self.instrument_working
+        if self.instrument_exclude:
+            config["instrumentation"]["exclude"] = ",".join(self.instrument_exclude)
+        if self.runner:
+            config["test"]["runner"] = self.runner.name
+
+        with open(path, "w") as fp:
+            config.write(fp)
+
 
 def parse_config(path: str) -> Config:
     return Config(path)
+
+
+def write_config(config: Config, path: str):
+    config.write(path)

@@ -1,7 +1,7 @@
-import future
+import __future__
 from string import digits
 
-print(future.__version__)
+print(__future__.print_function)
 print(digits)
 
 
@@ -12,8 +12,9 @@ class A:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
-    def foo(self, x, y):
-        return x + y
+    @staticmethod
+    def foo(x, y):
+        return -x + y
 
 
 async def bar(x, y, z):
@@ -54,12 +55,12 @@ def baz():
     return x
 
 
-def g():
+def foo():
     raise ValueError()
 
 
 try:
-    g()
+    foo()
 except ValueError:
     pass
 
@@ -68,5 +69,5 @@ m: int
 m: int = 1
 m += 1
 
-if m:
+if not False or m:
     print(m)

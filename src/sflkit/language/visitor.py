@@ -1,10 +1,10 @@
 import logging
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 
 from sflkit.language.meta import MetaVisitor
 
 
-class ASTVisitor:
+class ASTVisitor(ABC):
     def __init__(self, meta_visitor: MetaVisitor):
         self.meta_visitor = meta_visitor
         self.file = None

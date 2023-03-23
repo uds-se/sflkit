@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 
 
-class LocationsFinder:
+class LocationsFinder(ABC):
     def __init__(self, file: str, line: int):
         self.file = file
         self.line = line

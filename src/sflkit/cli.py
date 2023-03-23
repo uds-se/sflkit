@@ -6,7 +6,7 @@ from typing import Any
 import sflkit
 from sflkit.analysis.suggestion import Suggestion, Location
 
-INSTRUMENT = "instrumentation"
+INSTRUMENT = "instrument"
 ANALYZE = "analyze"
 
 
@@ -36,7 +36,7 @@ def main(args):
             json.dump(results, output, cls=ResultEncoder, indent=4)
 
 
-if __name__ == "__main__":
+def parse_args(args=None, namespace=None):
     arg_parser = argparse.ArgumentParser(
         prog="SFLKit",
         description="A workbench for statistical fault localization python programs"
@@ -96,5 +96,8 @@ if __name__ == "__main__":
         default="out.json",
         help="The report of the final results, i.e. the suggestions sorted by analysis",
     )
+    return arg_parser.parse_args(args=args, namespace=namespace)
 
-    main(arg_parser.parse_args())
+
+if __name__ == "__main__":
+    main(parse_args())
