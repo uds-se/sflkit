@@ -43,6 +43,7 @@ class TestCli(BaseTest):
         name = AnalysisType.LINE.name
         self.assertIn(name, results)
         metrics = results[name]
+        print(metrics)
         self.assertEqual(1, len(metrics))
         name = Spectrum.Ochiai.__name__
         self.assertIn(name, metrics)
