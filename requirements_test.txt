@@ -8,3 +8,4 @@ pytest-cov>=4.0.0
 pytest-html>=3.2.0
 pytest-rerunfailures>=11.1.2
 parameterized>=0.8.1
+future>=0.18.3
