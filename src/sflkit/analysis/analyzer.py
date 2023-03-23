@@ -54,6 +54,7 @@ class Analyzer(object):
         for suggestion in map(
             lambda p: p.get_suggestion(metric=metric, base_dir=base_dir), objects
         ):
+            print(suggestion)
             if suggestion.suspiciousness not in suggestions:
                 suggestions[suggestion.suspiciousness] = set(suggestion.lines)
             else:
