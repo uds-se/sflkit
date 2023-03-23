@@ -18,7 +18,7 @@ class TestCli(BaseTest):
             language="python",
             events="line",
             predicates="line",
-            failing="test_dir/EVENTS_PATH_0",
+            failing=os.path.join("test_dir", "EVENTS_PATH_0"),
             working=BaseTest.TEST_DIR,
         )
         Config.write(config, self.config_path)
@@ -36,6 +36,8 @@ class TestCli(BaseTest):
     def test_instrument_analyze(self):
         main(parse_args(["-c", self.config_path, "instrument"]))
         self.execute_subject([], 0)
+        with open(os.path.join("test_dir", "EVENTS_PATH_0"), "r") as fp:
+            print(fp.read())
         main(parse_args(["-c", self.config_path, "analyze", "-o", self.results_path]))
         with open(self.results_path, "r") as fp:
             results = json.load(fp)
