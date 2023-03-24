@@ -20,11 +20,11 @@ SFLKit supports currently Python 3 but we plan on releasing further language sup
 
 You need to navigate to the root directory of SFLKit and run
 ```sh
-pip install .
+pip install sflkit
 ```
 If you have a separate Python 2 and Python 3 on your machine you may need to run
 ```sh
-pip3 install .
+pip3 install sflkit
 ```
 
 ## Execution
