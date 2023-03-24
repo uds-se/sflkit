@@ -61,7 +61,7 @@ This is the specification of the config file.
 
 The general usage of SFLKit is
 ```
-usage: SFLKit [-h] [--debug] -c CONFIG {instrumentation,analyze} ...
+usage: sflkit [-h] [--debug] -c CONFIG {instrumentation,analyze} ...
 
 A workbench for statistical fault localization python programs and in the future other programs.
 
@@ -82,16 +82,16 @@ command:
 
 If you have adopted a config file for your investigations you need to execute
 ```sh
-python3 sfl.py -c path/to/your/config instrument
+sflkit -c path/to/your/config instrument
 ```
-to instrument the file. 
+to instrument the project defined by the file. 
 
 After the instrumentation, you can run your tests or experiments. But keep in mind to preserve the `EVENTS_PATH` file 
 for each failing and passing run.
 
 If you want to analyze your runs you need to execute
 ```sh
-python3 sfl.py -c path/to/your/config analyze
+sflkit -c path/to/your/config analyze
 ```
 which produces an output with the suggested code locations for the analysis objects and metrics defined in the config 
 file.
