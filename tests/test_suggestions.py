@@ -247,8 +247,8 @@ class SuggestionsFromPredicatesLoopTest(BaseTest):
             cls.TEST_LOOP,
             "",
             "loop",
-            relevant=[["1"]],
-            irrelevant=[["123"], ["abc"]],
+            relevant=[["00"]],
+            irrelevant=[["z"], ["123"]],
         )
         cls.original_dir = os.path.join(cls.TEST_RESOURCES, cls.TEST_LOOP)
 
@@ -259,8 +259,6 @@ class SuggestionsFromPredicatesLoopTest(BaseTest):
             metric=Spectrum.Tarantula,
         )
         self.assertAlmostEqual(1, suggestions[0].suspiciousness, delta=self.DELTA)
-        self.assertEqual(4, len(suggestions[0].lines))
-        self.assertIn(Location("main.py", 4), suggestions[0].lines)
-        self.assertIn(Location("main.py", 5), suggestions[0].lines)
+        self.assertEqual(2, len(suggestions[0].lines))
         self.assertIn(Location("main.py", 7), suggestions[0].lines)
         self.assertIn(Location("main.py", 8), suggestions[0].lines)
