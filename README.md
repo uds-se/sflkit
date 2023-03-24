@@ -1,6 +1,8 @@
 # SFLKit: A Workbench for Statistical Fault Localization
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/uds-se/sflkit)](https://img.shields.io/github/v/release/uds-se/sflkit)
+[![Python Version](https://img.shields.io/pypi/pyversions/sflkit)](https://pypi.org/project/sflkit/)
+[![GitHub release](https://img.shields.io/github/v/release/uds-se/sflkit)](https://img.shields.io/github/v/release/uds-se/sflkit)
+[![PyPI](https://img.shields.io/pypi/v/sflkit)](https://pypi.org/project/sflkit/)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/uds-se/sflkit/test-sflkit.yml?branch=main)](https://img.shields.io/github/actions/workflow/status/uds-se/sflkit/test-sflkit.yml?branch=main)
 [![Coverage Status](https://coveralls.io/repos/github/uds-se/sflkit/badge.svg?branch=main)](https://coveralls.io/github/uds-se/sflkit?branch=main)
 [![Licence](https://img.shields.io/github/license/uds-se/sflkit)](https://img.shields.io/github/license/uds-se/sflkit)
