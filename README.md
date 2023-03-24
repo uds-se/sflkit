@@ -1,11 +1,14 @@
 # SFLKit: A Workbench for Statistical Fault Localization
 
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/uds-se/sflkit)](https://img.shields.io/github/v/release/uds-se/sflkit)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/uds-se/sflkit/test-sflkit.yml?branch=main)](https://img.shields.io/github/actions/workflow/status/uds-se/sflkit/test-sflkit.yml?branch=main)
 [![Coverage Status](https://coveralls.io/repos/github/uds-se/sflkit/badge.svg?branch=main)](https://coveralls.io/github/uds-se/sflkit?branch=main)
-[![Dependencies](https://img.shields.io/librariesio/release/github/uds-se/sflkit)](https://libraries.io/github/uds-se/sflkit)
+[![GitHub](https://img.shields.io/github/license/uds-se/sflkit)](https://img.shields.io/github/license/uds-se/sflkit)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-SFLKit is an out-of-the-box library and tool for statistical fault localization. Statistical fault localization aims at detecting execution features that correlate with failures, such as whether individual lines are part of the execution.
+SFLKit (https://dl.acm.org/doi/10.1145/3540250.3558915) is an out-of-the-box library and tool for statistical fault 
+localization. Statistical fault localization aims at detecting execution features that correlate with failures, such as 
+whether individual lines are part of the execution.
 
 ## Language Support
 
@@ -81,10 +84,12 @@ python3 sfl.py -c path/to/your/config instrument
 ```
 to instrument the file. 
 
-After the instrumentation, you can run your tests or experiments. But keep in mind to preserve the `EVENTS_PATH` file for each failing and passing run.
+After the instrumentation, you can run your tests or experiments. But keep in mind to preserve the `EVENTS_PATH` file 
+for each failing and passing run.
 
 If you want to analyze your runs you need to execute
 ```sh
 python3 sfl.py -c path/to/your/config analyze
 ```
-which produces an output with the suggested code locations for the analysis objects and metrics defined in the config file.
+which produces an output with the suggested code locations for the analysis objects and metrics defined in the config 
+file.
