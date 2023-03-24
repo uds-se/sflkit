@@ -1,6 +1,7 @@
 import os
 
 from sflkit.analysis.analysis_type import AnalysisType
+from sflkit.analysis.spectra import Spectrum
 from sflkit.analysis.suggestion import Location, Suggestion
 from utils import BaseTest
 
@@ -146,7 +147,7 @@ class SuggestionsFromPredicatesTypesTest(BaseTest):
             relevant=[["t", ""]],
             irrelevant=[["a", "b"], ["t", "test"], ["test", "t"]],
         )
-        cls.original_dir = os.path.join(cls.TEST_RESOURCES, cls.TEST_SUGGESTIONS)
+        cls.original_dir = os.path.join(cls.TEST_RESOURCES, cls.TEST_TYPES)
 
     def test_scalar_pair_suggestions(self):
         suggestions = self.analyzer.get_sorted_suggestions(
@@ -237,3 +238,29 @@ class SuggestionsFromPredicatesTest3(BaseTest):
         self.assertAlmostEqual(0.5, suggestions[0].suspiciousness, delta=self.DELTA)
         self.assertEqual(1, len(suggestions[0].lines))
         self.assertIn(Location("main.py", 3), suggestions[0].lines)
+
+
+class SuggestionsFromPredicatesLoopTest(BaseTest):
+    @classmethod
+    def setUpClass(cls):
+        cls.analyzer = cls.run_analysis(
+            cls.TEST_LOOP,
+            "",
+            "loop",
+            relevant=[["1"]],
+            irrelevant=[["123"], ["abc"]],
+        )
+        cls.original_dir = os.path.join(cls.TEST_RESOURCES, cls.TEST_LOOP)
+
+    def test_loop_suggestions(self):
+        suggestions = self.analyzer.get_sorted_suggestions(
+            base_dir=self.original_dir,
+            type_=AnalysisType.LOOP,
+            metric=Spectrum.Tarantula,
+        )
+        self.assertAlmostEqual(1, suggestions[0].suspiciousness, delta=self.DELTA)
+        self.assertEqual(4, len(suggestions[0].lines))
+        self.assertIn(Location("main.py", 4), suggestions[0].lines)
+        self.assertIn(Location("main.py", 5), suggestions[0].lines)
+        self.assertIn(Location("main.py", 7), suggestions[0].lines)
+        self.assertIn(Location("main.py", 8), suggestions[0].lines)

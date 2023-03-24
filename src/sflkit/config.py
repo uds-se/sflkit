@@ -261,35 +261,35 @@ class Config:
         return Config(conf)
 
     def write(self, path):
-        config = configparser.ConfigParser()
-        config["target"] = dict()
-        config["events"] = dict()
-        config["instrumentation"] = dict()
-        config["test"] = dict()
+        conf = configparser.ConfigParser()
+        conf["target"] = dict()
+        conf["events"] = dict()
+        conf["instrumentation"] = dict()
+        conf["test"] = dict()
 
         if self.target_path:
-            config["target"]["path"] = self.target_path
+            conf["target"]["path"] = self.target_path
         if self.language:
-            config["target"]["language"] = self.language.name
+            conf["target"]["language"] = self.language.name
         if self.events:
-            config["events"]["events"] = ",".join(e.name for e in self.events)
+            conf["events"]["events"] = ",".join(e.name for e in self.events)
         if self.predicates:
-            config["events"]["predicates"] = ",".join(p.name for p in self.predicates)
+            conf["events"]["predicates"] = ",".join(p.name for p in self.predicates)
         if self.metrics:
-            config["events"]["metrics"] = ",".join(m.__name__ for m in self.metrics)
+            conf["events"]["metrics"] = ",".join(m.__name__ for m in self.metrics)
         if self.passing:
-            config["events"]["passing"] = ",".join(e.path for e in self.passing)
+            conf["events"]["passing"] = ",".join(e.path for e in self.passing)
         if self.failing:
-            config["events"]["failing"] = ",".join(e.path for e in self.failing)
+            conf["events"]["failing"] = ",".join(e.path for e in self.failing)
         if self.instrument_working:
-            config["instrumentation"]["path"] = self.instrument_working
+            conf["instrumentation"]["path"] = self.instrument_working
         if self.instrument_exclude:
-            config["instrumentation"]["exclude"] = ",".join(self.instrument_exclude)
+            conf["instrumentation"]["exclude"] = ",".join(self.instrument_exclude)
         if self.runner:
-            config["test"]["runner"] = self.runner.name
+            conf["test"]["runner"] = self.runner.name
 
         with open(path, "w") as fp:
-            config.write(fp)
+            conf.write(fp)
 
 
 def parse_config(path: str) -> Config:

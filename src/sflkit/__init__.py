@@ -1,6 +1,6 @@
 from sflkit.analysis.analyzer import Analyzer
 from sflkit.analysis.predicate import Predicate
-from sflkit.config import Config
+from sflkit.config import Config, parse_config
 from sflkit.instrumentation.dir_instrumentation import DirInstrumentation
 
 __version__ = "0.0.1"
@@ -19,7 +19,7 @@ def instrument_config(conf: Config, event_dump: str = None):
 
 
 def instrument(config_path: str, event_dump: str = None):
-    conf = Config(config_path)
+    conf = parse_config(config_path)
     instrument_config(conf, event_dump)
 
 
@@ -44,7 +44,7 @@ def analyze_config(conf: Config, analysis_dump: str = None):
 
 
 def analyze(config_path: str, analysis_dump: str = None):
-    conf = Config(config_path)
+    conf = parse_config(config_path)
     return analyze_config(conf, analysis_dump)
 
 

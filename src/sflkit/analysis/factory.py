@@ -61,7 +61,7 @@ class CombinationFactory(AnalysisFactory):
         [f.reset() for f in self.factories]
 
     def get_all(self) -> Set[AnalysisObject]:
-        return set().union(*map(AnalysisFactory.get_all, self.factories))
+        return set().union(*map(lambda f: f.get_all(), self.factories))
 
 
 class LineFactory(AnalysisFactory):
@@ -103,6 +103,9 @@ class FunctionFactory(AnalysisFactory):
 
 
 class LoopFactory(AnalysisFactory):
+    def get_all(self) -> Set[AnalysisObject]:
+        return set(obj for value in self.objects.values() for obj in value)
+
     def get_analysis(self, event, scope: Scope = None) -> List[AnalysisObject]:
         if event.event_type in (
             EventType.LOOP_BEGIN,
@@ -111,8 +114,18 @@ class LoopFactory(AnalysisFactory):
         ):
             key = (Loop.analysis_type(), event.file, event.line, event.loop_id)
             if key not in self.objects:
-                self.objects[key] = Loop(event)
-            return [self.objects[key]]
+                self.objects[key] = [
+                    Loop(event, Loop.evaluate_hit_0),
+                    Loop(event, Loop.evaluate_hit_1),
+                    Loop(event, Loop.evaluate_hit_more),
+                ]
+            if event.event_type == EventType.LOOP_BEGIN:
+                list(map(Loop.start_loop, self.objects[key]))
+            elif event.event_type == EventType.LOOP_HIT:
+                list(map(Loop.hit_loop, self.objects[key]))
+            elif event.event_type == EventType.LOOP_END:
+                return self.objects[key][:]
+            return list()
 
 
 class DefUseFactory(AnalysisFactory):

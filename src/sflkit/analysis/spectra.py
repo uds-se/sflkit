@@ -1,6 +1,6 @@
 import math
 from abc import ABC
-from typing import Callable, Union
+from typing import Callable, Optional
 
 import numpy
 
@@ -507,9 +507,26 @@ class DefUse(Spectrum):
 
 
 class Loop(Spectrum):
-    def __init__(self, event: Union[LoopBeginEvent, LoopHitEvent, LoopEndEvent]):
+    def __init__(
+        self,
+        event: LoopBeginEvent | LoopHitEvent | LoopEndEvent,
+        evaluate_hit: Optional[Callable] = None,
+    ):
         super().__init__(event.file, event.line)
         self.loop_stack = list()
+        self.evaluate_hit = evaluate_hit if evaluate_hit else self.evaluate_hit_0
+
+    @staticmethod
+    def evaluate_hit_0(x):
+        return x == 0
+
+    @staticmethod
+    def evaluate_hit_1(x):
+        return x == 1
+
+    @staticmethod
+    def evaluate_hit_more(x):
+        return x > 1
 
     @staticmethod
     def analysis_type():
@@ -531,6 +548,20 @@ class Loop(Spectrum):
             self.hits[id_] = [hits]
         else:
             self.hits[id_].append(hits)
+
+    def finalize(self, passed: list, failed: list):
+        for event_file in failed:
+            if event_file in self.hits and any(
+                map(self.evaluate_hit, self.hits[event_file])
+            ):
+                self.fail_observed()
+        for event_file in passed:
+            if event_file in self.hits and any(
+                map(self.evaluate_hit, self.hits[event_file])
+            ):
+                self.pass_observed()
+        self.set_passed(len(passed))
+        self.set_failed(len(failed))
 
     def get_suggestion(self, metric: Callable = None, base_dir: str = ""):
         finder = self.loop_finder(self.file, self.line)
