@@ -16,4 +16,7 @@ def middle(x, y, z):
     return m
 
 
-middle(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
+try:
+    middle(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
+except IndexError:
+    pass

@@ -52,7 +52,8 @@ class Spectrum(AnalysisObject, ABC):
             return 0
 
     def get_suggestion(self, metric: Callable = None, base_dir: str = ""):
-        return Suggestion([Location(self.file, self.line)], self.get_metric(metric))
+        self.assign_suspiciousness(metric)
+        return Suggestion([Location(self.file, self.line)], self.suspiciousness)
 
     def assign_suspiciousness(self, metric: Callable = None):
         self.suspiciousness = self.get_metric(metric)
@@ -62,12 +63,6 @@ class Spectrum(AnalysisObject, ABC):
             self.hits[id_] = 1
         else:
             self.hits[id_] += 1
-
-    def evaluate(self, failed: bool = False, res: bool = False):
-        if failed:
-            self.fail_observed()
-        else:
-            self.pass_observed()
 
     def pass_observed(self):
         self.passed_observed += 1

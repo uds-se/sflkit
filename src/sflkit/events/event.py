@@ -1,4 +1,5 @@
 import sys
+from abc import abstractmethod
 from typing import Any, List
 
 from sflkit.events import EventType
@@ -36,8 +37,9 @@ class Event(object):
     def __repr__(self):
         return f"{self.__class__.__name__}({self.file},{self.line},{self.id_})"
 
+    @abstractmethod
     def handle(self, model: Model):
-        pass
+        raise NotImplementedError()
 
     def serialize(self):
         return {
@@ -105,10 +107,6 @@ class BranchEvent(Event):
         return BranchEvent(
             *[s[p] for p in ["file", "line", "id", "then_id", "else_id"]]
         )
-
-    @staticmethod
-    def load(event_type: EventType, file: str, line: str, id_: str):
-        return Event(file, int(line), int(id_), event_type)
 
 
 class DefEvent(Event):

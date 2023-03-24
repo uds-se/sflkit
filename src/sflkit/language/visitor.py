@@ -12,15 +12,15 @@ class ASTVisitor(ABC):
 
     @abstractmethod
     def parse(self, source: str):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def unparse(self, ast) -> str:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def start_visit(self, ast):
-        pass
+        raise NotImplementedError()
 
     def instrument(self, src: str, dst: str, file: str = ""):
         self.file = file

@@ -20,6 +20,7 @@ class BaseTest(unittest.TestCase):
     TEST_LINES = "test_lines"
     TEST_BRANCHES = "test_branches"
     TEST_SUGGESTIONS = "test_suggestions"
+    TEST_TYPES = "test_types"
     TEST_PROPERTIES = "test_properties"
     TEST_SPECIAL_VALUES = "test_special_values"
     DELTA = 0.0000001

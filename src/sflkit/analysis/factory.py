@@ -27,7 +27,7 @@ class AnalysisFactory:
 
     @abstractmethod
     def get_analysis(self, event, scope: Scope = None) -> List[AnalysisObject]:
-        pass
+        raise NotImplementedError()
 
     def handle(self, event, scope: Scope = None):
         analysis = self.get_analysis(event, scope=scope)
@@ -58,7 +58,7 @@ class CombinationFactory(AnalysisFactory):
         )
 
     def reset(self):
-        map(AnalysisFactory.reset, self.factories)
+        [f.reset() for f in self.factories]
 
     def get_all(self) -> Set[AnalysisObject]:
         return set().union(*map(AnalysisFactory.get_all, self.factories))
@@ -255,7 +255,7 @@ class ReturnFactory(AnalysisFactory):
                         event.line,
                         event.function,
                         comp,
-                        event.event_type_,
+                        event.type_,
                     )
                     if key not in self.objects:
                         self.objects[key] = ReturnPredicate(event, comp, value=None)

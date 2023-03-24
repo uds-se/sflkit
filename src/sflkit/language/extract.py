@@ -7,7 +7,7 @@ class VariableExtract(ABC):
 
     @abstractmethod
     def visit(self, *args):
-        pass
+        raise NotImplementedError()
 
 
 class ConditionExtract(ABC):
@@ -16,4 +16,4 @@ class ConditionExtract(ABC):
 
     @abstractmethod
     def visit(self, *args):
-        pass
+        raise NotImplementedError()

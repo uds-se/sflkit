@@ -136,6 +136,35 @@ class SuggestionsFromPredicatesTest2(BaseTest):
         self.assertEqual(Location("main.py", 16), suggestions[0].lines[0])
 
 
+class SuggestionsFromPredicatesTypesTest(BaseTest):
+    @classmethod
+    def setUpClass(cls):
+        cls.analyzer = cls.run_analysis(
+            cls.TEST_TYPES,
+            "",
+            "scalar_pair,return",
+            relevant=[["t", ""]],
+            irrelevant=[["a", "b"], ["t", "test"], ["test", "t"]],
+        )
+        cls.original_dir = os.path.join(cls.TEST_RESOURCES, cls.TEST_SUGGESTIONS)
+
+    def test_scalar_pair_suggestions(self):
+        suggestions = self.analyzer.get_sorted_suggestions(
+            base_dir=self.original_dir, type_=AnalysisType.SCALAR_PAIR
+        )
+        self.assertAlmostEqual(0.75, suggestions[0].suspiciousness, delta=self.DELTA)
+        self.assertEqual(1, len(suggestions[0].lines))
+        self.assertIn(Location("main.py", 6), suggestions[0].lines)
+
+    def test_return_suggestions(self):
+        suggestions = self.analyzer.get_sorted_suggestions(
+            base_dir=self.original_dir, type_=AnalysisType.RETURN
+        )
+        self.assertAlmostEqual(0.5, suggestions[0].suspiciousness, delta=self.DELTA)
+        self.assertEqual(1, len(suggestions[0].lines))
+        self.assertEqual(Location("main.py", 13), suggestions[0].lines[0])
+
+
 class SuggestionsFromPredicatesTest3(BaseTest):
     def _analyze_tests(self, analysis, relevant, irrelevant):
 

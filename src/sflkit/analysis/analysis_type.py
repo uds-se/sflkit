@@ -53,35 +53,30 @@ class AnalysisObject(object):
     @staticmethod
     @abstractmethod
     def analysis_type() -> AnalysisType:
-        pass
+        raise NotImplementedError()
 
     def analyze(self, passed: List, failed: List):
         self.finalize(passed, failed)
         self.calculate()
 
-    @abstractmethod
     def calculate(self):
         pass
 
     @abstractmethod
     def finalize(self, passed: List, failed: List):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def hit(self, id_, event, scope_: Scope = None):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
-    def get_suggestions(self):
-        pass
+    def get_suggestion(self):
+        raise NotImplementedError()
 
     @abstractmethod
     def assign_suspiciousness(self):
-        pass
-
-    @abstractmethod
-    def evaluate(self, failed: bool = False, res: bool = False):
-        pass
+        raise NotImplementedError()
 
     @staticmethod
     def handle(event, events: List[Type]):
@@ -90,7 +85,7 @@ class AnalysisObject(object):
     @staticmethod
     @abstractmethod
     def events() -> List[Type]:
-        return list()
+        raise NotImplementedError()
 
     def __gt__(self, other):
         if hasattr(other, "suspiciousness"):

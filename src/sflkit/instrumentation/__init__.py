@@ -15,7 +15,7 @@ class Instrumentation:
     def instrument(
         self, src: str, dst: str, suffixes: List[str] = None, file: str = ""
     ):
-        pass
+        raise NotImplementedError()
 
     def dump_events(self, out_file):
         with open(out_file, "w") as fp:

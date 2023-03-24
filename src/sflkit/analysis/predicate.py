@@ -29,15 +29,15 @@ class Predicate(Spectrum, ABC):
         for p in passed:
             if p in self.true_hits:
                 if self.true_hits[p] > 0:
-                    self.true_irrelevant += 1
+                    self.true_irrelevant_observed()
                 else:
-                    self.false_irrelevant += 1
+                    self.false_irrelevant_observed()
         for f in failed:
             if f in self.true_hits:
                 if self.true_hits[f] > 0:
-                    self.true_relevant += 1
+                    self.true_relevant_observed()
                 else:
-                    self.false_relevant += 1
+                    self.false_relevant_observed()
 
     def hit(self, id_, event, scope_: scope.Scope = None):
         super(Predicate, self).hit(id_, event, scope_)
@@ -51,28 +51,8 @@ class Predicate(Spectrum, ABC):
             metric = Predicate.IncreaseTrue
         return super().get_metric(metric)
 
-    def evaluate(
-        self, failed: bool = False, res: bool = False, scope_: scope.Scope = None
-    ):
-        super().evaluate(failed)
-        self._handle_predicate(
-            failed, res or self._evaluate_predicate(scope_ if scope_ else dict())
-        )
-
     def _evaluate_predicate(self, scope_: scope.Scope):
         return False
-
-    def _handle_predicate(self, failed=False, res=False):
-        if failed:
-            if res:
-                self.true_relevant_observed()
-            else:
-                self.false_relevant_observed()
-        else:
-            if res:
-                self.true_irrelevant_observed()
-            else:
-                self.false_irrelevant_observed()
 
     def true_relevant_observed(self):
         self.true_relevant += 1
