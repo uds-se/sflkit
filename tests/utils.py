@@ -10,7 +10,6 @@ from sflkit.model import EventFile
 
 
 class BaseTest(unittest.TestCase):
-
     TEST_RESOURCES = os.path.join("resources", "subjects", "tests")
     TEST_DIR = "test_dir"
     TEST_EVENTS = "test_events.json"
@@ -24,6 +23,7 @@ class BaseTest(unittest.TestCase):
     TEST_LOOP = "test_loop"
     TEST_PROPERTIES = "test_properties"
     TEST_SPECIAL_VALUES = "test_special_values"
+    TEST_RUNNER = "test_runner"
     DELTA = 0.0000001
 
     EVENTS = [

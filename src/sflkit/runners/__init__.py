@@ -1,6 +1,6 @@
 import enum
 
-from sflkit.runners.run import Runner, VoidRunner
+from sflkit.runners.run import Runner, VoidRunner, PytestRunner, UnittestRunner
 
 
 class RunnerType(enum.Enum):
@@ -8,3 +8,5 @@ class RunnerType(enum.Enum):
         self.runner = runner
 
     VOID_RUNNER = VoidRunner
+    PYTEST_RUNNER = PytestRunner
+    UNITTEST_RUNNER = UnittestRunner
