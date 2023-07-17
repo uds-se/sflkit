@@ -1,9 +1,12 @@
+from os import PathLike
+from pathlib import Path
+
 from sflkit.analysis.analyzer import Analyzer
 from sflkit.analysis.predicate import Predicate
 from sflkit.config import Config, parse_config
 from sflkit.instrumentation.dir_instrumentation import DirInstrumentation
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 
 def instrument_config(conf: Config, event_dump: str = None):
@@ -18,12 +21,29 @@ def instrument_config(conf: Config, event_dump: str = None):
         instrumentation.dump_events(event_dump)
 
 
-def instrument(config_path: str, event_dump: str = None):
+def instrument(config_path: PathLike, event_dump: str = None):
     conf = parse_config(config_path)
     instrument_config(conf, event_dump)
 
 
-def analyze_config(conf: Config, analysis_dump: str = None):
+def run_config(conf: Config, output: PathLike = None):
+    runner = conf.runner
+    if runner is None:
+        raise ValueError("No runner defined")
+    runner = runner.runner
+    if output is None:
+        output = (Path.cwd() / "events").absolute()
+    else:
+        output = Path(output)
+    runner.run(conf.instrument_working, output)
+
+
+def run(config_path: PathLike, output: PathLike = None):
+    conf = parse_config(config_path)
+    run_config(conf, output)
+
+
+def analyze_config(conf: Config, analysis_dump: PathLike = None):
     analyzer = Analyzer(conf.failing, conf.passing, conf.factory)
     analyzer.analyze()
     if analysis_dump:
@@ -43,7 +63,7 @@ def analyze_config(conf: Config, analysis_dump: str = None):
     return results
 
 
-def analyze(config_path: str, analysis_dump: str = None):
+def analyze(config_path: PathLike, analysis_dump: PathLike = None):
     conf = parse_config(config_path)
     return analyze_config(conf, analysis_dump)
 

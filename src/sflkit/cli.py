@@ -7,6 +7,7 @@ import sflkit
 from sflkit.analysis.suggestion import Suggestion, Location
 
 INSTRUMENT = "instrument"
+RUN = "run"
 ANALYZE = "analyze"
 
 
@@ -30,6 +31,8 @@ def main(args):
         logging.getLogger().setLevel(logging.INFO)
     if args.command == INSTRUMENT:
         sflkit.instrument(args.config, args.events)
+    elif args.command == RUN:
+        sflkit.run(args.config, args.out)
     elif args.command == ANALYZE:
         results = sflkit.analyze(args.config, args.analysis)
         with open(args.out, "w") as output:
@@ -95,6 +98,19 @@ def parse_args(args=None, namespace=None):
         dest="out",
         default="out.json",
         help="The report of the final results, i.e. the suggestions sorted by analysis",
+    )
+
+    analyze_parser = commands.add_parser(
+        RUN,
+        description="The run command executes the tests of the subject and creates the event files.",
+        help="execute the tests and collect predicates",
+    )
+    analyze_parser.add_argument(
+        "-o",
+        "--out",
+        dest="out",
+        default=None,
+        help="The output path of the event files.",
     )
     return arg_parser.parse_args(args=args, namespace=namespace)
 
