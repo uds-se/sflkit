@@ -2,6 +2,7 @@ import configparser
 import csv
 import os.path
 import queue
+from pathlib import Path
 from typing import List, Callable, Union
 
 from sflkit.analysis.predicate import Predicate
@@ -76,10 +77,9 @@ class Config:
                 config = configparser.ConfigParser()
                 config.read(path)
             try:
-
                 # target section
                 target = config["target"]
-                self.target_path = target["path"]
+                self.target_path = Path(target["path"])
                 self.language = Language[target["language"].upper()]
                 self.language.setup()
 
@@ -149,7 +149,7 @@ class Config:
                     self.instrument_exclude = list(csv.reader([instrument["exclude"]]))[
                         0
                     ]
-                self.instrument_working = instrument["path"]
+                self.instrument_working = Path(instrument["path"])
 
                 # test section
                 if "test" in config:
