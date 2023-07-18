@@ -1,6 +1,6 @@
 import math
 from abc import ABC
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import numpy
 
@@ -509,7 +509,7 @@ class DefUse(Spectrum):
 class Loop(Spectrum):
     def __init__(
         self,
-        event: LoopBeginEvent | LoopHitEvent | LoopEndEvent,
+        event: Union[LoopBeginEvent, LoopHitEvent, LoopEndEvent],
         evaluate_hit: Optional[Callable] = None,
     ):
         super().__init__(event.file, event.line)
