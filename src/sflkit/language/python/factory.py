@@ -321,7 +321,7 @@ class DefEventFactory(PythonEventFactory):
     def visit_AsyncFor(self, node: AsyncFor) -> Injection:
         return self.visit_for(node)
 
-    def visit_with(self, node: With | AsyncWith):
+    def visit_with(self, node: typing.Union[With, AsyncWith]):
         def_events = list()
         for item in node.items:
             if item.optional_vars:
@@ -516,7 +516,9 @@ class FunctionErrorEventFactory(FunctionEventFactory):
     def get_function(self):
         return "add_function_error_event"
 
-    def get_event_call(self, event: FunctionEnterEvent | FunctionErrorEvent):
+    def get_event_call(
+        self, event: typing.Union[FunctionEnterEvent, FunctionErrorEvent]
+    ):
         return get_call(
             self.get_function(),
             event.file,

@@ -5,7 +5,7 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Tuple
 
 from sflkit.logger import LOGGER
 
@@ -204,7 +204,7 @@ class PytestRunner(Runner):
     @staticmethod
     def __get_pytest_result__(
         output: bytes,
-    ) -> tuple[bool, Optional[int], Optional[int]]:
+    ) -> Tuple[bool, Optional[int], Optional[int]]:
         match = PYTEST_RESULT_PATTERN.search(output)
         if match:
             if match.group("f"):
