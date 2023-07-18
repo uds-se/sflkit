@@ -1,7 +1,7 @@
-import logging
 from abc import abstractmethod, ABC
 
 from sflkit.language.meta import MetaVisitor
+from sflkit.logger import LOGGER
 
 
 class ASTVisitor(ABC):
@@ -33,4 +33,4 @@ class ASTVisitor(ABC):
         self.meta_visitor.exit_file(self.file)
         with open(dst, "w") as fp:
             fp.write(self.unparse(instrumented_tree))
-        logging.info(f"I found {len(self.events) - prev_events} events in {src}.")
+        LOGGER.info(f"I found {len(self.events) - prev_events} events in {src}.")

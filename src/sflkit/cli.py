@@ -5,6 +5,7 @@ from typing import Any
 
 import sflkit
 from sflkit.analysis.suggestion import Suggestion, Location
+from sflkit.logger import LOGGER
 
 INSTRUMENT = "instrument"
 RUN = "run"
@@ -26,9 +27,9 @@ class ResultEncoder(json.JSONEncoder):
 
 def main(args):
     if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
+        LOGGER.setLevel(logging.DEBUG)
     else:
-        logging.getLogger().setLevel(logging.INFO)
+        LOGGER.setLevel(logging.INFO)
     if args.command == INSTRUMENT:
         sflkit.instrument(args.config, args.events)
     elif args.command == RUN:

@@ -7,6 +7,8 @@ import subprocess
 from pathlib import Path
 from typing import List, Dict, Optional, Any
 
+from sflkit.logger import LOGGER
+
 Environment = Dict[str, str]
 
 PYTEST_COLLECT_PATTERN = re.compile(
@@ -166,6 +168,7 @@ class Runner(abc.ABC):
         for test_result in TestResult:
             (output / test_result.get_dir()).mkdir(parents=True, exist_ok=True)
         for run_id, test in enumerate(tests):
+            LOGGER.info(f"Run test {test}")
             test_result = self.run_test(directory, test, environ=environ)
             if os.path.exists(directory / "EVENTS_PATH"):
                 shutil.move(
