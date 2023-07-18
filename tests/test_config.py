@@ -1,6 +1,5 @@
 import os.path
 import unittest
-from pathlib import Path
 
 from sflkit import instrument, analyze
 from sflkit.analysis.analysis_type import AnalysisType
@@ -23,7 +22,7 @@ class ConfigTests(unittest.TestCase):
             working=os.path.join("instrumentation", "path"),
             exclude="test,test2",
         )
-        self.assertEqual(Path("test", "path"), config.target_path)
+        self.assertEqual(os.path.join("test", "path"), config.target_path)
         self.assertEqual(Language.PYTHON, config.language)
         self.assertEqual(2, len(config.events))
         self.assertIn(EventType.LINE, config.events)
@@ -46,7 +45,9 @@ class ConfigTests(unittest.TestCase):
                 )
             )
         )
-        self.assertEqual(Path("instrumentation", "path"), config.instrument_working)
+        self.assertEqual(
+            os.path.join("instrumentation", "path"), config.instrument_working
+        )
         self.assertEqual(2, len(config.instrument_exclude))
         self.assertIn("test", config.instrument_exclude)
         self.assertIn("test2", config.instrument_exclude)
@@ -60,7 +61,7 @@ class ConfigTests(unittest.TestCase):
             predicates="Def_Use",
             working=os.path.join("instrumentation", "path"),
         )
-        self.assertEqual(Path("test", "path"), config.target_path)
+        self.assertEqual(os.path.join("test", "path"), config.target_path)
         self.assertEqual(Language.PYTHON, config.language)
         self.assertEqual(2, len(config.events))
         self.assertIn(EventType.DEF, config.events)
@@ -69,7 +70,9 @@ class ConfigTests(unittest.TestCase):
         self.assertIn(AnalysisType.DEF_USE, config.predicates)
         self.assertEqual(1, len(config.factory.factories))
         self.assertIsInstance(config.factory.factories[0], DefUseFactory)
-        self.assertEqual(Path("instrumentation", "path"), config.instrument_working)
+        self.assertEqual(
+            os.path.join("instrumentation", "path"), config.instrument_working
+        )
         self.assertEqual(0, len(config.instrument_exclude))
         self.assertIsNone(config.runner)
 

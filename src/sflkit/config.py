@@ -268,7 +268,7 @@ class Config:
         conf["test"] = dict()
 
         if self.target_path:
-            conf["target"]["path"] = str(self.target_path)
+            conf["target"]["path"] = self.target_path
         if self.language:
             conf["target"]["language"] = self.language.name
         if self.events:
@@ -282,7 +282,7 @@ class Config:
         if self.failing:
             conf["events"]["failing"] = ",".join(e.path for e in self.failing)
         if self.instrument_working:
-            conf["instrumentation"]["path"] = str(self.instrument_working)
+            conf["instrumentation"]["path"] = self.instrument_working
         if self.instrument_exclude:
             conf["instrumentation"]["exclude"] = ",".join(self.instrument_exclude)
         if self.runner:
