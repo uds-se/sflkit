@@ -70,7 +70,6 @@ def analyze(config_path: PathLike, analysis_dump: PathLike = None):
 
 __all__ = [
     "analysis",
-    "events",
     "instrument",
     "language",
     "model",

@@ -1,9 +1,8 @@
 import os
 from typing import List
 
-from sflkit import Config, instrument_config
-from sflkit.events import EventType
-from sflkit.events.event import (
+from sflkitlib.events import EventType
+from sflkitlib.events.event import (
     LineEvent,
     Event,
     load_json,
@@ -18,6 +17,8 @@ from sflkit.events.event import (
     LoopHitEvent,
     LoopEndEvent,
 )
+
+from sflkit import Config, instrument_config
 from sflkit.language.language import Language
 from utils import BaseTest
 

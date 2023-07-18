@@ -5,7 +5,8 @@ import queue
 from pathlib import Path
 from typing import List, Callable, Union
 
-from sflkit.analysis.predicate import Predicate
+from sflkitlib.events import EventType
+
 from sflkit.analysis.analysis_type import AnalysisType
 from sflkit.analysis.factory import (
     analysis_factory_mapping,
@@ -13,8 +14,8 @@ from sflkit.analysis.factory import (
     AnalysisFactory,
 )
 from sflkit.analysis.mapping import analysis_mapping
+from sflkit.analysis.predicate import Predicate
 from sflkit.analysis.spectra import Spectrum
-from sflkit.events import EventType
 from sflkit.language.language import Language
 from sflkit.language.meta import (
     CombinationVisitor,

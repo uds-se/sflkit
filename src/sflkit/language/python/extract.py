@@ -1,9 +1,9 @@
 import ast
 from typing import Any, Union
 
+from sflkitlib.events.event import ConditionEvent
 from sortedcollections import OrderedSet
 
-from sflkit.events.event import ConditionEvent
 from sflkit.language.extract import VariableExtract, ConditionExtract
 
 

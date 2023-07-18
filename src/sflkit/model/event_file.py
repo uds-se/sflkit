@@ -1,6 +1,6 @@
 import csv
 
-from sflkit.events import event
+from sflkitlib.events import event
 
 
 class EventFile(object):

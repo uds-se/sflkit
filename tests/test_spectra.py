@@ -1,10 +1,10 @@
 import unittest
 
 from parameterized import parameterized
+from sflkitlib.events.event import LineEvent
 
 from sflkit.analysis import similarity
 from sflkit.analysis.spectra import Line
-from sflkit.events.event import LineEvent
 from utils import BaseTest
 
 
@@ -72,7 +72,6 @@ class TestSimilarityCoefficient(BaseTest):
 
     @parameterized.expand(similarity.similarity_coefficients)
     def test_coefficient(self, metric):
-
         result = getattr(self.line, metric)()
 
         self.assertAlmostEqual(

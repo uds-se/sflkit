@@ -3,9 +3,9 @@ import os
 from pathlib import Path
 
 from parameterized import parameterized
+from sflkitlib.events import event, EventType
 
 from sflkit import instrument_config, Config
-from sflkit.events import event, EventType
 from utils import BaseTest
 
 
@@ -93,7 +93,7 @@ class TestInstrumentation(BaseTest):
 class TestLib(BaseTest):
     @classmethod
     def setUpClass(cls) -> None:
-        from sflkit.instrumentation import lib
+        from sflkitlib import lib
 
         atexit.unregister(lib.dump_events)
         cls.lib = lib

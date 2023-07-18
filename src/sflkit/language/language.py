@@ -1,9 +1,10 @@
 import enum
 from typing import List, Dict, Type
 
+from sflkitlib.events import EventType
+
 import sflkit.language.python.factory as python_factory
 from sflkit.analysis.analysis_type import AnalysisObject
-from sflkit.events import EventType
 from sflkit.language.extract import VariableExtract, ConditionExtract
 from sflkit.language.finder import BranchFinder, LoopFinder, FunctionFinder
 from sflkit.language.meta import MetaVisitor

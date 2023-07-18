@@ -1,6 +1,8 @@
 from abc import abstractmethod
 from typing import List, Type, Set
 
+from sflkitlib.events import EventType
+
 from sflkit.analysis.analysis_type import AnalysisObject, AnalysisType
 from sflkit.analysis.predicate import (
     Branch,
@@ -17,7 +19,6 @@ from sflkit.analysis.predicate import (
     EmptyBytesPredicate,
 )
 from sflkit.analysis.spectra import Line, Function, Loop, DefUse
-from sflkit.events import EventType
 from sflkit.model.scope import Scope
 
 
@@ -157,7 +158,6 @@ class DefUseFactory(AnalysisFactory):
 class ConditionFactory(AnalysisFactory):
     def get_analysis(self, event, scope: Scope = None) -> List[AnalysisObject]:
         if event.event_type == EventType.CONDITION:
-
             key = (Condition.analysis_type(), event.file, event.line, event.condition)
             if key not in self.objects:
                 self.objects[key] = Condition(event.file, event.line, event.condition)

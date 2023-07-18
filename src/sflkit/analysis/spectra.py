@@ -3,11 +3,8 @@ from abc import ABC
 from typing import Callable, Optional
 
 import numpy
-
-from sflkit.analysis.analysis_type import AnalysisObject, AnalysisType
-from sflkit.analysis.suggestion import Suggestion, Location
-from sflkit.events import EventType
-from sflkit.events.event import (
+from sflkitlib.events import EventType
+from sflkitlib.events.event import (
     LineEvent,
     FunctionEnterEvent,
     LoopEndEvent,
@@ -16,6 +13,9 @@ from sflkit.events.event import (
     DefEvent,
     UseEvent,
 )
+
+from sflkit.analysis.analysis_type import AnalysisObject, AnalysisType
+from sflkit.analysis.suggestion import Suggestion, Location
 from sflkit.model.scope import Scope
 
 

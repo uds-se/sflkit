@@ -2,7 +2,7 @@ import ast
 import typing
 from ast import *
 
-from sflkit.events.event import (
+from sflkitlib.events.event import (
     LineEvent,
     Event,
     BranchEvent,
@@ -16,9 +16,10 @@ from sflkit.events.event import (
     UseEvent,
     ConditionEvent,
 )
+
 from sflkit.language.meta import MetaVisitor, Injection, IDGenerator, TmpGenerator
 
-python_lib = "sflkit.instrumentation.lib"
+python_lib = "sflkitlib.lib"
 
 
 def get_call(function, *args) -> Expr:

@@ -1,4 +1,3 @@
-import atexit
 import logging
 import os
 import queue
@@ -6,11 +5,9 @@ import re
 import shutil
 from typing import List
 
-from sflkit.instrumentation import lib, Instrumentation
+from sflkit.instrumentation import Instrumentation
 from sflkit.instrumentation.file_instrumentation import FileInstrumentation
 from sflkit.language.visitor import ASTVisitor
-
-atexit.unregister(lib.dump_events)
 
 
 class DirInstrumentation(Instrumentation):

@@ -2,7 +2,7 @@ import random
 from abc import ABC
 from typing import List, Type, Any
 
-from sflkit.events.event import Event
+from sflkitlib.events.event import Event
 
 
 class Injection:

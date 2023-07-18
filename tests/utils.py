@@ -4,8 +4,9 @@ import subprocess
 import unittest
 from typing import List
 
+from sflkitlib.events import event
+
 from sflkit import instrument_config, Analyzer, Config
-from sflkit.events import event
 from sflkit.model import EventFile
 
 

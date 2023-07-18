@@ -2,7 +2,7 @@ import json
 from abc import abstractmethod
 from typing import List
 
-from sflkit.events import event
+from sflkitlib.events import event
 from sflkit.language.visitor import ASTVisitor
 
 
@@ -22,4 +22,4 @@ class Instrumentation:
             json.dump(self.events, fp, cls=event.EventEncoder)
 
 
-__all__ = ["dir_instrumentation", "file_instrumentation", "lib", "Instrumentation"]
+__all__ = ["dir_instrumentation", "file_instrumentation", "Instrumentation"]

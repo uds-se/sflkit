@@ -1,6 +1,7 @@
+sflkitlib>=0.0.1
 astor>=0.8.1
-numpy>=1.24.0
-matplotlib>=3.4.3
+numpy==1.25.1
+matplotlib==3.7.2
 sortedcollections>=2.1.0
 parameterized>=0.8.1
 future>=0.18.3

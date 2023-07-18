@@ -2,13 +2,14 @@ import os.path
 import unittest
 from pathlib import Path
 
+from sflkitlib.events import EventType
+
 from sflkit import instrument, analyze
 from sflkit.analysis.analysis_type import AnalysisType
 from sflkit.analysis.factory import DefUseFactory
 from sflkit.analysis.spectra import Spectrum
 from sflkit.analysis.suggestion import Location
 from sflkit.config import Config, write_config
-from sflkit.events import EventType
 from sflkit.language.language import Language
 from sflkit.language.python.factory import LineEventFactory, BranchEventFactory
 from utils import BaseTest

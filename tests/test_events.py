@@ -2,10 +2,10 @@ import os
 import subprocess
 
 from parameterized import parameterized
+from sflkitlib.events import event
 
 from sflkit import instrument_config
 from sflkit.config import Config
-from sflkit.events import event
 from utils import BaseTest
 
 
@@ -56,6 +56,7 @@ class EventTests(BaseTest):
                 self.assertIsInstance(
                     e, event.BranchEvent, f"{e} is not a condition event"
                 )
+                e: event.BranchEvent
                 self.assertEqual(self.ACCESS, e.file, f"{e} has not correct file")
                 self.assertEqual(
                     branch_lines[branch_i], e.line, f"{e} has not correct line"
@@ -134,6 +135,7 @@ class EventTests(BaseTest):
                 self.assertIsInstance(
                     e, event.FunctionEnterEvent, f"{e} is not a line event"
                 )
+                e: event.FunctionEnterEvent
                 self.assertEqual(BaseTest.ACCESS, e.file, f"{e} has not correct file")
                 self.assertEqual(line, e.line, f"{e} has not correct line")
                 self.assertEqual(function, e.function, f"{e} has not correct function")
@@ -143,6 +145,7 @@ class EventTests(BaseTest):
                 self.assertIsInstance(
                     e, event.FunctionExitEvent, f"{e} is not a line event"
                 )
+                e: event.FunctionExitEvent
                 self.assertEqual(BaseTest.ACCESS, e.file, f"{e} has not correct file")
                 self.assertEqual(line, e.line, f"{e} has not correct line")
                 self.assertEqual(function, e.function, f"{e} has not correct function")
@@ -163,6 +166,7 @@ class EventTests(BaseTest):
             if e.event_type == event.EventType.BRANCH:
                 line, mod = branches[branches_i]
                 self.assertIsInstance(e, event.BranchEvent, f"{e} is not a line event")
+                e: event.BranchEvent
                 self.assertEqual(BaseTest.ACCESS, e.file, f"{e} has not correct file")
                 self.assertEqual(line, e.line, f"{e} has not correct line")
                 if mod < 0:

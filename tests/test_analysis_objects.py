@@ -1,3 +1,14 @@
+from sflkitlib.events import EventType
+from sflkitlib.events.event import (
+    LineEvent,
+    BranchEvent,
+    FunctionEnterEvent,
+    LoopBeginEvent,
+    DefEvent,
+    UseEvent,
+    FunctionExitEvent,
+)
+
 from sflkit.analysis.analysis_type import AnalysisType
 from sflkit.analysis.predicate import (
     Branch,
@@ -14,16 +25,6 @@ from sflkit.analysis.predicate import (
     ContainsSpecialPredicate,
 )
 from sflkit.analysis.spectra import Line, Function, Loop, DefUse
-from sflkit.events import EventType
-from sflkit.events.event import (
-    LineEvent,
-    BranchEvent,
-    FunctionEnterEvent,
-    LoopBeginEvent,
-    DefEvent,
-    UseEvent,
-    FunctionExitEvent,
-)
 from utils import BaseTest
 
 

@@ -2,11 +2,12 @@ import enum
 from abc import ABC
 from typing import Tuple, Callable, Optional
 
+from sflkitlib.events import EventType
+from sflkitlib.events.event import BranchEvent, FunctionExitEvent, DefEvent
+
 from sflkit.analysis.analysis_type import AnalysisType
 from sflkit.analysis.spectra import Spectrum
 from sflkit.analysis.suggestion import Suggestion, Location
-from sflkit.events import EventType
-from sflkit.events.event import BranchEvent, FunctionExitEvent, DefEvent
 from sflkit.model import scope
 
 
