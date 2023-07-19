@@ -5,7 +5,7 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Tuple
 
 Environment = Dict[str, str]
 
@@ -251,6 +251,7 @@ class InputRunner(Runner):
         self.access = access
         self.passing: Dict[str, List[str]] = self._prepare_tests(passing, "passing")
         self.failing: Dict[str, List[str]] = self._prepare_tests(failing, "failing")
+        self.output: Dict[str, Tuple[str, str]] = dict()
 
     @staticmethod
     def _prepare_tests(tests: List[str | List[str]], prefix: str):
@@ -263,17 +264,23 @@ class InputRunner(Runner):
         return list(self.passing.keys()) + list(self.failing.keys())
 
     def run_test(
-        self, directory: Path, test: str, environ: Environment = None
+        self, directory: Path, test_name: str, environ: Environment = None
     ) -> TestResult:
-        if "passing" in test:
-            test = self.passing[test]
+        if "passing" in test_name:
+            test = self.passing[test_name]
             result = TestResult.PASSING
         else:
-            test = self.failing[test]
+            test = self.failing[test_name]
             result = TestResult.FAILING
-        subprocess.run(
-            ["python", "-m", self.access] + test,
+        process = subprocess.run(
+            ["python", self.access] + test,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             env=environ,
             cwd=directory,
+        )
+        self.output[test_name] = (
+            process.stdout.decode("utf8"),
+            process.stderr.decode("utf8"),
         )
         return result
