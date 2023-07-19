@@ -142,6 +142,9 @@ class Branch(Predicate):
             self.get_metric(metric),
         )
 
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.line}:{'then' if self.then else 'else'}:{self.then_id}"
+
 
 class Comp(enum.Enum):
     LT = 0
@@ -164,6 +167,12 @@ class Comp(enum.Enum):
             return x > y
         elif self == Comp.NE:
             return x != y
+
+    def __repr__(self):
+        return self.name
+
+    def __str__(self):
+        return self.name
 
 
 class Comparison(Predicate, ABC):
@@ -209,6 +218,9 @@ class ScalarPair(Comparison):
     def _get_second(self, scope_: scope.Scope):
         return scope_.value(self.var2)
 
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.line}:{self.var1}{self.op}{self.var2}"
+
 
 class VariablePredicate(Comparison):
     def __init__(self, event, op: Comp):
@@ -227,6 +239,9 @@ class VariablePredicate(Comparison):
 
     def _get_first(self, scope_: scope.Scope):
         return scope_.value(self.var)
+
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.line}:{self.var}{self.op}0"
 
 
 class NonePredicate(Comparison):
@@ -249,6 +264,9 @@ class NonePredicate(Comparison):
 
     def _get_second(self, scope_: scope.Scope):
         return None
+
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.line}:{self.var}"
 
 
 class ReturnPredicate(Comparison):
@@ -275,6 +293,9 @@ class ReturnPredicate(Comparison):
     def _get_second(self, scope_: scope.Scope):
         return self.value
 
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.line}:{self.function}{self.op}{self.value}"
+
 
 class EmptyStringPredicate(Comparison):
     def __init__(self, event: DefEvent):
@@ -297,6 +318,9 @@ class EmptyStringPredicate(Comparison):
     def _get_second(self, scope_: scope.Scope):
         return ""
 
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.line}:{self.var}"
+
 
 class EmptyBytesPredicate(Comparison):
     def __init__(self, event: DefEvent):
@@ -318,6 +342,9 @@ class EmptyBytesPredicate(Comparison):
 
     def _get_second(self, scope_: scope.Scope):
         return b""
+
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.line}:{self.var}"
 
 
 class FunctionPredicate(Predicate, ABC):
@@ -345,6 +372,9 @@ class IsAsciiPredicate(FunctionPredicate):
     def analysis_type():
         return AnalysisType.ASCII_STRING
 
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.line}:{self.var}"
+
 
 class ContainsDigitPredicate(FunctionPredicate):
     def __init__(self, event: DefEvent):
@@ -358,6 +388,9 @@ class ContainsDigitPredicate(FunctionPredicate):
     def analysis_type():
         return AnalysisType.DIGIT_STRING
 
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.line}:{self.var}"
+
 
 class ContainsSpecialPredicate(FunctionPredicate):
     def __init__(self, event: DefEvent):
@@ -370,6 +403,9 @@ class ContainsSpecialPredicate(FunctionPredicate):
     @staticmethod
     def analysis_type():
         return AnalysisType.SPECIAL_STRING
+
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.line}:{self.var}"
 
 
 class Condition(Predicate):
@@ -391,3 +427,6 @@ class Condition(Predicate):
             self.true_hits[id_] = 0
         if event.value:
             self.true_hits[id_] += 1
+
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.line}:{self.condition}"

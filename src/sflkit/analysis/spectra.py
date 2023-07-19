@@ -40,6 +40,9 @@ class Spectrum(AnalysisObject, ABC):
         self.failed_not_observed = failed_not_observed
         self.hits = dict()
 
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.line}"
+
     def get_metric(self, metric: Callable = None):
         if metric is None:
             metric = Spectrum.Ochiai
@@ -483,6 +486,9 @@ class Function(Spectrum):
             self.get_metric(metric),
         )
 
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.function}:{self.line}"
+
 
 class DefUse(Spectrum):
     def __init__(self, def_event: DefEvent, use_event: UseEvent):
@@ -504,6 +510,9 @@ class DefUse(Spectrum):
             [Location(self.file, self.line), Location(self.use_file, self.use_line)],
             self.get_metric(metric),
         )
+
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.line}:{self.use_file}:{self.use_line}:{self.var}"
 
 
 class Loop(Spectrum):
@@ -569,3 +578,6 @@ class Loop(Spectrum):
             [Location(self.file, line) for line in finder.get_locations(base_dir)],
             self.get_metric(metric),
         )
+
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.line}"

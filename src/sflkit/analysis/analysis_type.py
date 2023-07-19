@@ -22,6 +22,12 @@ class AnalysisType(enum.Enum):
     SPECIAL_STRING = 13
     EMPTY_BYTES = 14
 
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
+
 
 """
 If you want to add new spectra or predicates, please register them here and in sflkit/language/.py
@@ -29,7 +35,6 @@ If you want to add new spectra or predicates, please register them here and in s
 
 
 class AnalysisObject(object):
-
     function_finder = None
     loop_finder = None
     branch_finder = None
@@ -48,7 +53,7 @@ class AnalysisObject(object):
         return f"{self.analysis_type()}:{self.suspiciousness}"
 
     def __str__(self):
-        return repr(self)
+        return f"{self.analysis_type()}"
 
     @staticmethod
     @abstractmethod
