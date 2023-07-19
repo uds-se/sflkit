@@ -238,3 +238,42 @@ class PytestRunner(Runner):
 
 class UnittestRunner(Runner):
     pass
+
+
+class InputRunner(Runner):
+    def __init__(
+        self,
+        access: os.PathLike,
+        passing: List[str | List[str]],
+        failing: List[str | List[str]],
+    ):
+        super().__init__()
+        self.access = access
+        self.passing: Dict[str, List[str]] = self._prepare_tests(passing, "passing")
+        self.failing: Dict[str, List[str]] = self._prepare_tests(failing, "failing")
+
+    @staticmethod
+    def _prepare_tests(tests: List[str | List[str]], prefix: str):
+        return {
+            f"{prefix}_{i}": (test if isinstance(test, list) else test.split("\n"))
+            for i, test in enumerate(tests)
+        }
+
+    def get_tests(self, directory: Path, environ: Environment = None) -> List[str]:
+        return list(self.passing.keys()) + list(self.failing.keys())
+
+    def run_test(
+        self, directory: Path, test: str, environ: Environment = None
+    ) -> TestResult:
+        if "passing" in test:
+            test = self.passing[test]
+            result = TestResult.PASSING
+        else:
+            test = self.failing[test]
+            result = TestResult.FAILING
+        subprocess.run(
+            ["python", "-m", self.access] + test,
+            env=environ,
+            cwd=directory,
+        )
+        return result
