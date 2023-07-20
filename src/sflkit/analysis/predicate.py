@@ -5,7 +5,7 @@ from typing import Tuple, Callable, Optional
 from sflkitlib.events import EventType
 from sflkitlib.events.event import BranchEvent, FunctionExitEvent, DefEvent
 
-from sflkit.analysis.analysis_type import AnalysisType
+from sflkit.analysis.analysis_type import AnalysisType, EvaluationResult
 from sflkit.analysis.spectra import Spectrum
 from sflkit.analysis.suggestion import Suggestion, Location
 from sflkit.model import scope
@@ -24,6 +24,17 @@ class Predicate(Spectrum, ABC):
         self.increase_true = 0
         self.increase_false = 0
         self.true_hits = dict()
+        self.last_evaluation = EvaluationResult.UNOBSERVED
+
+    @staticmethod
+    def default_evaluation() -> EvaluationResult:
+        return EvaluationResult.UNOBSERVED
+
+    def get_last_evaluation(self, id_: int) -> EvaluationResult:
+        if id_ not in self.true_hits:
+            return self.default_evaluation()
+        else:
+            return self.last_evaluation
 
     def finalize(self, passed: list, failed: list):
         super().finalize(passed, failed)
@@ -46,6 +57,9 @@ class Predicate(Spectrum, ABC):
             self.true_hits[id_] = 0
         if self._evaluate_predicate(scope_):
             self.true_hits[id_] += 1
+            self.last_evaluation = EvaluationResult.TRUE
+        else:
+            self.last_evaluation = EvaluationResult.FALSE
 
     def get_metric(self, metric: Callable = None):
         if metric is None:
@@ -131,6 +145,9 @@ class Branch(Predicate):
         if event.then_id == self.then_id:
             super(Predicate, self).hit(id_, event, scope_)
             self.true_hits[id_] += 1
+            self.last_evaluation = EvaluationResult.TRUE
+        else:
+            self.last_evaluation = EvaluationResult.FALSE
 
     def get_suggestion(self, metric: Callable = None, base_dir: str = ""):
         if metric == Predicate.IncreaseFalse:
@@ -427,6 +444,9 @@ class Condition(Predicate):
             self.true_hits[id_] = 0
         if event.value:
             self.true_hits[id_] += 1
+            self.last_evaluation = EvaluationResult.TRUE
+        else:
+            self.last_evaluation = EvaluationResult.FALSE
 
     def __str__(self):
         return f"{self.analysis_type()}:{self.file}:{self.line}:{self.condition}"

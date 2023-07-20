@@ -5,6 +5,12 @@ from typing import List, Type
 from sflkit.model.scope import Scope
 
 
+class EvaluationResult(enum.Enum):
+    TRUE = 1
+    FALSE = 0
+    UNOBSERVED = -1
+
+
 class AnalysisType(enum.Enum):
     LINE = 0
     BRANCH = 1
@@ -48,6 +54,7 @@ class AnalysisObject(object):
     # noinspection PyUnusedLocal
     def __init__(self, event):
         self.suspiciousness: float = 0
+        self.last_evaluation: EvaluationResult = EvaluationResult.UNOBSERVED
 
     def __repr__(self):
         return f"{self.analysis_type()}:{self.suspiciousness}"

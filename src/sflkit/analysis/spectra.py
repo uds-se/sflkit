@@ -14,7 +14,7 @@ from sflkitlib.events.event import (
     UseEvent,
 )
 
-from sflkit.analysis.analysis_type import AnalysisObject, AnalysisType
+from sflkit.analysis.analysis_type import AnalysisObject, AnalysisType, EvaluationResult
 from sflkit.analysis.suggestion import Suggestion, Location
 from sflkit.model.scope import Scope
 
@@ -39,9 +39,20 @@ class Spectrum(AnalysisObject, ABC):
         self.failed_observed = failed_observed
         self.failed_not_observed = failed_not_observed
         self.hits = dict()
+        self.last_evaluation: EvaluationResult = EvaluationResult.FALSE
 
     def __str__(self):
         return f"{self.analysis_type()}:{self.file}:{self.line}"
+
+    @staticmethod
+    def default_evaluation() -> EvaluationResult:
+        return EvaluationResult.FALSE
+
+    def get_last_evaluation(self, id_: int) -> EvaluationResult:
+        if id_ not in self.hits:
+            return self.default_evaluation()
+        else:
+            return self.last_evaluation
 
     def get_metric(self, metric: Callable = None):
         if metric is None:
@@ -62,6 +73,7 @@ class Spectrum(AnalysisObject, ABC):
         self.suspiciousness = self.get_metric(metric)
 
     def hit(self, id_, event, scope_: Scope = None):
+        self.last_evaluation = True
         if id_ not in self.hits:
             self.hits[id_] = 1
         else:
