@@ -56,6 +56,9 @@ class AnalysisObject(object):
         self.suspiciousness: float = 0
         self.last_evaluation: EvaluationResult = EvaluationResult.UNOBSERVED
 
+    def get_last_evaluation(self, id_: int) -> EvaluationResult:
+        return self.last_evaluation
+
     def __repr__(self):
         return f"{self.analysis_type()}:{self.suspiciousness}"
 

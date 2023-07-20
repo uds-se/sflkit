@@ -73,7 +73,7 @@ class Spectrum(AnalysisObject, ABC):
         self.suspiciousness = self.get_metric(metric)
 
     def hit(self, id_, event, scope_: Scope = None):
-        self.last_evaluation = True
+        self.last_evaluation = EvaluationResult.TRUE
         if id_ not in self.hits:
             self.hits[id_] = 1
         else:
