@@ -203,12 +203,18 @@ class BranchEventFactory(PythonEventFactory):
         )
 
     def visit_Try(self, node: Try) -> Injection:
-        else_branch_event = BranchEvent(
-            self.file, node.lineno, self.id_generator.get_next_id(), self.branch_id, -1
-        )
-        return Injection(
-            orelse=[self.get_event_call(else_branch_event)], events=[else_branch_event]
-        )
+        if node.handlers:
+            else_branch_event = BranchEvent(
+                self.file,
+                node.lineno,
+                self.id_generator.get_next_id(),
+                self.branch_id,
+                -1,
+            )
+            return Injection(
+                orelse=[self.get_event_call(else_branch_event)],
+                events=[else_branch_event],
+            )
 
 
 class DefEventFactory(PythonEventFactory):
