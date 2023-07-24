@@ -215,6 +215,8 @@ class BranchEventFactory(PythonEventFactory):
                 orelse=[self.get_event_call(else_branch_event)],
                 events=[else_branch_event],
             )
+        else:
+            return Injection()
 
 
 class DefEventFactory(PythonEventFactory):
