@@ -74,6 +74,12 @@ class PythonInstrumentation(NodeTransformer, ASTVisitor):
                     )
         if injection.error:
             error_var = self.meta_visitor.tmp_generator.get_var_name()
+            raise_stmt = [
+                Raise(
+                    exc=Name(id=error_var),
+                    cause=None,
+                )
+            ]
             if body:
                 node.body = (
                     Try(
@@ -84,7 +90,7 @@ class PythonInstrumentation(NodeTransformer, ASTVisitor):
                                     id="BaseException",
                                 ),
                                 name=error_var,
-                                body=injection.error,
+                                body=injection.error + raise_stmt,
                             )
                         ],
                         orelse=[],
@@ -101,7 +107,7 @@ class PythonInstrumentation(NodeTransformer, ASTVisitor):
                                     id="BaseException",
                                 ),
                                 name=error_var,
-                                body=injection.error,
+                                body=injection.error + raise_stmt,
                             )
                         ],
                         orelse=[],

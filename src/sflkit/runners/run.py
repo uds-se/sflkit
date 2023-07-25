@@ -16,6 +16,8 @@ PYTEST_RESULT_PATTERN = re.compile(
     rb"= ((((?P<f>\d+) failed)|((?P<p>\d+) passed)|(\d+ warnings?))(, )?)+ in "
 )
 
+DEFAULT_TIMEOUT = 10
+
 
 class PytestNode(abc.ABC):
     def __init__(self, name: str, parent=None):
@@ -141,7 +143,8 @@ class TestResult(enum.Enum):
 
 
 class Runner(abc.ABC):
-    def __init__(self, re_filter: str = r".*"):
+    def __init__(self, re_filter: str = r".*", timeout=DEFAULT_TIMEOUT):
+        self.timeout = timeout
         self.re_filter = re.compile(re_filter)
 
     def get_tests(self, directory: Path, environ: Environment = None) -> List[str]:
@@ -218,12 +221,16 @@ class PytestRunner(Runner):
     def run_test(
         self, directory: Path, test: str, environ: Environment = None
     ) -> TestResult:
-        output = subprocess.run(
-            ["python", "-m", "pytest", test],
-            stdout=subprocess.PIPE,
-            env=environ,
-            cwd=directory,
-        ).stdout
+        try:
+            output = subprocess.run(
+                ["python", "-m", "pytest", test],
+                stdout=subprocess.PIPE,
+                env=environ,
+                cwd=directory,
+                timeout=self.timeout,
+            ).stdout
+        except subprocess.TimeoutExpired:
+            return TestResult.UNDEFINED
         successful, passing, failing = self.__get_pytest_result__(output)
         if successful:
             if passing > 0 and failing == 0:
@@ -272,13 +279,17 @@ class InputRunner(Runner):
         else:
             test = self.failing[test_name]
             result = TestResult.FAILING
-        process = subprocess.run(
-            ["python", self.access] + test,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=environ,
-            cwd=directory,
-        )
+        try:
+            process = subprocess.run(
+                ["python", self.access] + test,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=environ,
+                cwd=directory,
+                timeout=self.timeout,
+            )
+        except subprocess.TimeoutExpired:
+            return TestResult.UNDEFINED
         self.output[test_name] = (
             process.stdout.decode("utf8"),
             process.stderr.decode("utf8"),
