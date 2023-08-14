@@ -91,7 +91,11 @@ class PytestTree:
     def parse(self, output: str, directory: Path = None):
         current_level = 0
         current_node = None
+        root_dir = Path.cwd() if directory is None else directory
+        directory = None if directory is None else directory.absolute()
         for line in output.split("\n"):
+            if line.startswith("rootdir: ") and directory is not None:
+                root_dir = Path(line.replace("rootdir: ", "")).absolute()
             match = PYTEST_COLLECT_PATTERN.search(line)
             if match:
                 level = self._count_spaces(line) // 2
@@ -99,11 +103,11 @@ class PytestTree:
                 if match.group("kind") == "Package":
                     node_class = Package
                     if directory:
-                        name = os.path.relpath(name, directory)
+                        name = str((root_dir / name).relative_to(directory))
                 elif match.group("kind") == "Module":
                     node_class = Module
                     if directory:
-                        name = os.path.relpath(name, directory)
+                        name = str((root_dir / name).relative_to(directory))
                 elif match.group("kind") in ("Class", "UnitTestCase"):
                     node_class = Class
                 elif match.group("kind") in ("Function", "TestCaseFunction"):
