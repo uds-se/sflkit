@@ -80,6 +80,24 @@ class Function(PytestNode):
             return f"::{self.name}"
 
 
+def split(s: str, sep: str = ",", esc: str = "\"'"):
+    values = list()
+    current = ""
+    escape = None
+    for c in s:
+        if c == escape:
+            escape = None
+        elif escape is None and c in esc:
+            escape = c
+        elif escape is None and c in sep:
+            values.append(current)
+            current = ""
+            continue
+        current += c
+    values.append(current)
+    return values
+
+
 class PytestTree:
     def __init__(self):
         self.roots: List[PytestNode] = []
@@ -95,7 +113,7 @@ class PytestTree:
         directory = None if directory is None else directory.absolute()
         for line in output.split("\n"):
             if line.startswith("rootdir: ") and directory is not None:
-                root_dir = Path(line.replace("rootdir: ", "")).absolute()
+                root_dir = Path(split(line)[0].replace("rootdir: ", "")).absolute()
             match = PYTEST_COLLECT_PATTERN.search(line)
             if match:
                 level = self._count_spaces(line) // 2
