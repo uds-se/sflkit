@@ -3,6 +3,7 @@ import enum
 import os
 import re
 import shutil
+import string
 import subprocess
 from pathlib import Path
 from typing import List, Dict, Optional, Any, Tuple
@@ -180,6 +181,13 @@ class Runner(abc.ABC):
     def filter_tests(self, tests: List[str]) -> List[str]:
         return list(filter(self.re_filter.search, tests))
 
+    @staticmethod
+    def safe(s: str):
+        for c in string.punctuation:
+            if c in s:
+                s = s.replace(c, "_")
+        return s
+
     def run_tests(
         self,
         directory: Path,
@@ -195,7 +203,7 @@ class Runner(abc.ABC):
             if os.path.exists(directory / "EVENTS_PATH"):
                 shutil.move(
                     directory / "EVENTS_PATH",
-                    output / test_result.get_dir() / str(run_id),
+                    output / test_result.get_dir() / self.safe(test),
                 )
 
     def run(self, directory: Path, output: Path, environ: Environment = None):
