@@ -839,7 +839,9 @@ class ConditionEventFactory(PythonEventFactory):
         return Injection(pre=[var_assign], assign=var_use, events=events)
 
     def visit_While(self, node: While) -> Injection:
-        return self.visit_condition(node)
+        injection = self.visit_condition(node)
+        injection.body_last = injection.pre
+        return injection
 
     def visit_If(self, node: If) -> Injection:
         return self.visit_condition(node)

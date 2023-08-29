@@ -6,7 +6,7 @@ from sflkit.analysis.predicate import Predicate
 from sflkit.config import Config, parse_config
 from sflkit.instrumentation.dir_instrumentation import DirInstrumentation
 
-__version__ = "0.2.8"
+__version__ = "0.2.9"
 
 
 def instrument_config(conf: Config, event_dump: str = None):

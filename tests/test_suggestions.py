@@ -168,7 +168,6 @@ class SuggestionsFromPredicatesTypesTest(BaseTest):
 
 class SuggestionsFromPredicatesTest3(BaseTest):
     def _analyze_tests(self, analysis, relevant, irrelevant):
-
         return self.run_analysis(
             self.TEST_SPECIAL_VALUES,
             "def",
@@ -262,3 +261,26 @@ class SuggestionsFromPredicatesLoopTest(BaseTest):
         self.assertEqual(2, len(suggestions[0].lines))
         self.assertIn(Location("main.py", 7), suggestions[0].lines)
         self.assertIn(Location("main.py", 8), suggestions[0].lines)
+
+
+class SuggestionsFromConditionsLoopTest(BaseTest):
+    @classmethod
+    def setUpClass(cls):
+        cls.analyzer = cls.run_analysis(
+            cls.TEST_LOOP,
+            "",
+            "condition",
+            relevant=[["00"]],
+            irrelevant=[["z"], ["123"]],
+        )
+        cls.original_dir = os.path.join(cls.TEST_RESOURCES, cls.TEST_LOOP)
+
+    def test_loop_suggestions(self):
+        suggestions = self.analyzer.get_sorted_suggestions(
+            base_dir=self.original_dir,
+            type_=AnalysisType.CONDITION,
+            metric=Spectrum.Tarantula,
+        )
+        self.assertAlmostEqual(0.5, suggestions[0].suspiciousness, delta=self.DELTA)
+        self.assertEqual(1, len(suggestions[0].lines))
+        self.assertIn(Location("main.py", 7), suggestions[0].lines)
