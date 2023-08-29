@@ -27,6 +27,9 @@ classifiers = [
 "Homepage" = "https://github.com/uds-se/sflkit/"
 "Bug Tracker" = "https://github.com/uds-se/sflkit/issues"
 
+[project.scripts]
+sflkit = "sflkit.cli:main"
+
 [tool.black]
 line-length = 88
 target-version = ['py310']
