@@ -1,4 +1,3 @@
-import logging
 import os
 import queue
 import re
@@ -8,6 +7,7 @@ from typing import List
 from sflkit.instrumentation import Instrumentation
 from sflkit.instrumentation.file_instrumentation import FileInstrumentation
 from sflkit.language.visitor import ASTVisitor
+from sflkit.logger import LOGGER
 
 
 class DirInstrumentation(Instrumentation):
@@ -35,7 +35,7 @@ class DirInstrumentation(Instrumentation):
             else:
                 os.remove(dst)
         if os.path.isfile(src):
-            logging.debug(f"I found a file I can instrument at {src}.")
+            LOGGER.debug(f"I found a file I can instrument at {src}.")
             self.file_instrumentation.instrument(
                 src, dst, suffixes=suffixes, file=os.path.split(src)[-1]
             )
@@ -60,25 +60,25 @@ class DirInstrumentation(Instrumentation):
                         )
                     continue
                 if os.path.isdir(os.path.join(src, element)):
-                    logging.debug(f"I found a subdir at {element}.")
+                    LOGGER.debug(f"I found a subdir at {element}.")
                     os.makedirs(os.path.join(dst, element), exist_ok=True)
                     for f in os.listdir(os.path.join(src, element)):
                         file_queue.put(os.path.join(element, f))
                 elif any(
                     element.endswith(f".{suffix}") for suffix in suffixes
                 ) and not os.path.islink(os.path.join(src, element)):
-                    logging.debug(f"I found a file I can instrument at {element}.")
+                    LOGGER.debug(f"I found a file I can instrument at {element}.")
                     self.file_instrumentation.instrument(
                         os.path.join(src, element),
                         os.path.join(dst, element),
                         file=element,
                     )
                 else:
-                    logging.debug(f"I found a file I will not instrument at {element}.")
+                    LOGGER.debug(f"I found a file I will not instrument at {element}.")
                     shutil.copy(
                         os.path.join(src, element),
                         os.path.join(dst, element),
                         follow_symlinks=False,
                     )
             self.events = self.file_instrumentation.events
-        logging.info(f"I found {len(self.events)} events in {src}.")
+        LOGGER.info(f"I found {len(self.events)} events in {src}.")
