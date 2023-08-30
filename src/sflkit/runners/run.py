@@ -229,15 +229,28 @@ class VoidRunner(Runner):
 
 class PytestRunner(Runner):
     def get_tests(self, directory: Path, environ: Environment = None) -> List[str]:
-        output = subprocess.run(
-            ["python", "-m", "pytest", "--collect-only"],
-            stdout=subprocess.PIPE,
-            env=environ,
-            cwd=directory,
-        ).stdout.decode("utf-8")
-        tree = PytestTree()
-        tree.parse(output, directory=directory)
-        return list(map(str, tree.visit()))
+        commands = [
+            [],
+            ["tests"],
+            [os.path.join("tests", "tests.py")],
+            [os.path.join("tests", "test.py")],
+            ["test"],
+            [os.path.join("test", "tests.py")],
+            [os.path.join("test", "test.py")],
+        ]
+        for c in commands:
+            output = subprocess.run(
+                ["python", "-m", "pytest", "--collect-only"] + c,
+                stdout=subprocess.PIPE,
+                env=environ,
+                cwd=directory,
+            ).stdout.decode("utf-8")
+            tree = PytestTree()
+            tree.parse(output, directory=directory)
+            result = list(map(str, tree.visit()))
+            if result:
+                return result
+        return list()
 
     @staticmethod
     def __get_pytest_result__(
