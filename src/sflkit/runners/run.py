@@ -112,9 +112,9 @@ class PytestTree:
         if (s.startswith('"') and s.endswith('"')) or (
             s.startswith("'") and s.endswith("'")
         ):
-            return s[1:-1]
+            return s[1:-1].replace("\\\\\\\\", "\\")
         else:
-            return s
+            return s.replace("\\\\", "\\")
 
     def parse(self, output: str, directory: Path = None):
         current_level = 0
