@@ -107,6 +107,15 @@ class PytestTree:
     def _count_spaces(s: str):
         return len(s) - len(s.lstrip())
 
+    @staticmethod
+    def _clear_name(s: str):
+        if (s.startswith('"') and s.endswith('"')) or (
+            s.startswith("'") and s.endswith("'")
+        ):
+            return s[1:-1]
+        else:
+            return s
+
     def parse(self, output: str, directory: Path = None):
         current_level = 0
         current_node = None
@@ -118,7 +127,7 @@ class PytestTree:
             match = PYTEST_COLLECT_PATTERN.search(line)
             if match:
                 level = self._count_spaces(line) // 2
-                name = match.group("name")
+                name = self._clear_name(match.group("name"))
                 if match.group("kind") == "Package":
                     node_class = Package
                     if directory:
