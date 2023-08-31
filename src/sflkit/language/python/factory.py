@@ -807,10 +807,16 @@ class UseEventFactory(PythonEventFactory):
         return self.visit_use(node.value)
 
     def visit_Global(self, node: Global) -> Injection:
-        return self.visit_use(node)
+        injection = self.visit_use(node)
+        injection.post = injection.pre
+        injection.pre = list()
+        return injection
 
     def visit_Nonlocal(self, node: Nonlocal) -> Injection:
-        return self.visit_use(node)
+        injection = self.visit_use(node)
+        injection.post = injection.pre
+        injection.pre = list()
+        return injection
 
 
 class ConditionEventFactory(PythonEventFactory):

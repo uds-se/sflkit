@@ -240,7 +240,13 @@ class PytestRunner(Runner):
         ]
         for c in commands:
             output = subprocess.run(
-                ["python", "-m", "pytest", "--collect-only"] + c,
+                [
+                    "python",
+                    "-m",
+                    "pytest",
+                    "--collect-only",
+                ]
+                + c,
                 stdout=subprocess.PIPE,
                 env=environ,
                 cwd=directory,
