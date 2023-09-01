@@ -178,7 +178,7 @@ class Runner(abc.ABC):
         self.timeout = timeout
         self.re_filter = re.compile(re_filter)
 
-    def get_tests(self, directory: Path, environ: Environment = None) -> List[str]:
+    def get_tests(self, directory: Path, base: Optional[os.PathLike] = None, environ: Environment = None) -> List[str]:
         return []
 
     def run_test(
@@ -214,11 +214,11 @@ class Runner(abc.ABC):
                     output / test_result.get_dir() / self.safe(test),
                 )
 
-    def run(self, directory: Path, output: Path, environ: Environment = None):
+    def run(self, directory: Path, output: Path, base: Optional[os.PathLike] = None, environ: Environment = None):
         self.run_tests(
             directory,
             output,
-            self.filter_tests(self.get_tests(directory, environ=environ)),
+            self.filter_tests(self.get_tests(directory, base=base, environ=environ)),
             environ=environ,
         )
 
@@ -228,35 +228,25 @@ class VoidRunner(Runner):
 
 
 class PytestRunner(Runner):
-    def get_tests(self, directory: Path, environ: Environment = None) -> List[str]:
-        commands = [
-            [],
-            ["tests"],
-            [os.path.join("tests", "tests.py")],
-            [os.path.join("tests", "test.py")],
-            ["test"],
-            [os.path.join("test", "tests.py")],
-            [os.path.join("test", "test.py")],
-        ]
-        for c in commands:
-            output = subprocess.run(
-                [
-                    "python",
-                    "-m",
-                    "pytest",
-                    "--collect-only",
-                ]
-                + c,
-                stdout=subprocess.PIPE,
-                env=environ,
-                cwd=directory,
-            ).stdout.decode("utf-8")
-            tree = PytestTree()
-            tree.parse(output, directory=directory)
-            result = list(map(str, tree.visit()))
-            if result:
-                return result
-        return list()
+    def get_tests(self, directory: Path, base: Optional[os.PathLike] = None, environ: Environment = None) -> List[str]:
+        c = []
+        if base:
+            c.append(base)
+        output = subprocess.run(
+            [
+                "python",
+                "-m",
+                "pytest",
+                "--collect-only",
+            ]
+            + c,
+            stdout=subprocess.PIPE,
+            env=environ,
+            cwd=directory,
+        ).stdout.decode("utf-8")
+        tree = PytestTree()
+        tree.parse(output, directory=directory)
+        return list(map(str, tree.visit()))
 
     @staticmethod
     def __get_pytest_result__(
@@ -324,7 +314,7 @@ class InputRunner(Runner):
             for i, test in enumerate(tests)
         }
 
-    def get_tests(self, directory: Path, environ: Environment = None) -> List[str]:
+    def get_tests(self, directory: Path, base: Optional[os.PathLike] = None, environ: Environment = None) -> List[str]:
         return list(self.passing.keys()) + list(self.failing.keys())
 
     def run_test(
