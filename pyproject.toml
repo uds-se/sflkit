@@ -25,7 +25,7 @@ classifiers = [
 dependencies = [
     "sflkitlib>=0.0.1",
     "astor>=0.8.1",
-    "numpy>=1.25.2",
+    "numpy>=1.23.5",
     "matplotlib>=3.7.2",
     "sortedcollections>=2.1.0"
 ]
