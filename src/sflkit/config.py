@@ -150,13 +150,17 @@ class Config:
                 # instrumentation section
                 instrument = config["instrumentation"]
                 if "include" in instrument:
-                    self.instrument_include = list(
-                        set(list(csv.reader([instrument["include"]]))[0]).remove("")
-                    )
+                    self.instrument_include = list(csv.reader([instrument["include"]]))[
+                        0
+                    ]
+                    while "" in self.instrument_include:
+                        self.instrument_include.remove("")
                 if "exclude" in instrument:
-                    self.instrument_exclude = list(
-                        set(list(csv.reader([instrument["exclude"]]))[0]).remove("")
-                    )
+                    self.instrument_exclude = list(csv.reader([instrument["exclude"]]))[
+                        0
+                    ]
+                    while "" in self.instrument_exclude:
+                        self.instrument_exclude.remove("")
                 self.instrument_working = Path(instrument["path"])
 
                 # test section
