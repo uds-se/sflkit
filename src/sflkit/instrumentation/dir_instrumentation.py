@@ -85,7 +85,9 @@ class DirInstrumentation(Instrumentation):
                 element, check = file_queue.get()
                 if check and self.check_included(element, includes):
                     self.handle_element(element, file_queue, src, dst, suffixes, False)
-                elif any(re.match(exclude, element) for exclude in excludes):
+                elif element != "" and any(
+                    re.match(exclude, element) for exclude in excludes
+                ):
                     if os.path.isdir(os.path.join(src, element)):
                         shutil.copytree(
                             os.path.join(src, element),
