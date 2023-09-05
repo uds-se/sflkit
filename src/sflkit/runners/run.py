@@ -178,7 +178,12 @@ class Runner(abc.ABC):
         self.timeout = timeout
         self.re_filter = re.compile(re_filter)
 
-    def get_tests(self, directory: Path, base: Optional[os.PathLike] = None, environ: Environment = None) -> List[str]:
+    def get_tests(
+        self,
+        directory: Path,
+        base: Optional[os.PathLike] = None,
+        environ: Environment = None,
+    ) -> List[str]:
         return []
 
     def run_test(
@@ -214,7 +219,13 @@ class Runner(abc.ABC):
                     output / test_result.get_dir() / self.safe(test),
                 )
 
-    def run(self, directory: Path, output: Path, base: Optional[os.PathLike] = None, environ: Environment = None):
+    def run(
+        self,
+        directory: Path,
+        output: Path,
+        base: Optional[os.PathLike] = None,
+        environ: Environment = None,
+    ):
         self.run_tests(
             directory,
             output,
@@ -228,7 +239,12 @@ class VoidRunner(Runner):
 
 
 class PytestRunner(Runner):
-    def get_tests(self, directory: Path, base: Optional[os.PathLike] = None, environ: Environment = None) -> List[str]:
+    def get_tests(
+        self,
+        directory: Path,
+        base: Optional[os.PathLike] = None,
+        environ: Environment = None,
+    ) -> List[str]:
         c = []
         if base:
             c.append(base)
@@ -314,7 +330,12 @@ class InputRunner(Runner):
             for i, test in enumerate(tests)
         }
 
-    def get_tests(self, directory: Path, base: Optional[os.PathLike] = None, environ: Environment = None) -> List[str]:
+    def get_tests(
+        self,
+        directory: Path,
+        base: Optional[os.PathLike] = None,
+        environ: Environment = None,
+    ) -> List[str]:
         return list(self.passing.keys()) + list(self.failing.keys())
 
     def run_test(

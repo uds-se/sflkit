@@ -13,6 +13,7 @@ def instrument_config(conf: Config, event_dump: str = None):
         conf.target_path,
         conf.instrument_working,
         suffixes=conf.language.suffixes,
+        includes=conf.instrument_include,
         excludes=conf.instrument_exclude,
     )
     if event_dump:

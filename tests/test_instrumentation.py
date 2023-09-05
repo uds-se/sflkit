@@ -10,16 +10,7 @@ from utils import BaseTest
 
 
 class TestInstrumentation(BaseTest):
-    def test_complex_structure(self):
-        config = Config.create(
-            path=os.path.join(BaseTest.TEST_RESOURCES, "test_instrumentation"),
-            language="python",
-            events="line",
-            predicates="line",
-            working=BaseTest.TEST_DIR,
-            exclude="exclude_dir,exclude.py,excluded_file,"
-            + os.path.join("package", "exclude.py"),
-        )
+    def _test_complex_structure(self, config: Config):
         instrument_config(config)
         dst = Path(BaseTest.TEST_DIR)
         src = Path(BaseTest.TEST_RESOURCES, "test_instrumentation")
@@ -88,6 +79,32 @@ class TestInstrumentation(BaseTest):
             self.assertNotEqual(
                 s_content, d_content, f"{d} has the same content then {s}"
             )
+
+    def test_complex_structure_exclude(self):
+        self._test_complex_structure(
+            Config.create(
+                path=os.path.join(BaseTest.TEST_RESOURCES, "test_instrumentation"),
+                language="python",
+                events="line",
+                predicates="line",
+                working=BaseTest.TEST_DIR,
+                exclude=r"exclude_dir,exclude\.py,excluded_file,"
+                + os.path.join("package", r"exclude.py"),
+            )
+        )
+
+    def test_complex_structure_include(self):
+        self._test_complex_structure(
+            Config.create(
+                path=os.path.join(BaseTest.TEST_RESOURCES, "test_instrumentation"),
+                language="python",
+                events="line",
+                predicates="line",
+                working=BaseTest.TEST_DIR,
+                include=r"package,main\.py",
+                exclude=os.path.join("package", r"exclude\.py"),
+            )
+        )
 
 
 class TestLib(BaseTest):

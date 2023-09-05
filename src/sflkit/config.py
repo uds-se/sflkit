@@ -51,6 +51,8 @@ class Config:
 
     [instrumentation]
     path=/path/to/the/instrumented/subject
+    include=file(,file)*                    : Files to include in the instrumentation (other files will automatically
+                                              be excluded), should be a python re pattern
     exclude=file(,file)*                    : Files to exclude from the instrumentation, should be a python re pattern
 
     [test]
@@ -68,6 +70,7 @@ class Config:
         self.visitor = None
         self.passing = list()
         self.failing = list()
+        self.instrument_include = list()
         self.instrument_exclude = list()
         self.instrument_working = None
         self.runner = None
@@ -146,6 +149,10 @@ class Config:
                     )
                 # instrumentation section
                 instrument = config["instrumentation"]
+                if "include" in instrument:
+                    self.instrument_include = list(csv.reader([instrument["include"]]))[
+                        0
+                    ]
                 if "exclude" in instrument:
                     self.instrument_exclude = list(csv.reader([instrument["exclude"]]))[
                         0
@@ -173,6 +180,7 @@ class Config:
         visitor: ASTVisitor = None,
         passing: List[EventFile] = None,
         failing: List[EventFile] = None,
+        instrument_include: List[str] = None,
         instrument_exclude: List[str] = None,
         instrument_working: str = None,
         runner: RunnerType = None,
@@ -190,6 +198,7 @@ class Config:
         conf.visitor = visitor
         conf.passing = passing if passing else list()
         conf.failing = failing if failing else list()
+        conf.instrument_include = instrument_include if instrument_include else list()
         conf.instrument_exclude = instrument_exclude if instrument_exclude else list()
         conf.instrument_working = instrument_working
         conf.runner = runner
@@ -229,6 +238,7 @@ class Config:
         passing=None,
         failing=None,
         working=None,
+        include=None,
         exclude=None,
         runner=None,
     ):
@@ -254,6 +264,8 @@ class Config:
             conf["events"]["failing"] = failing
         if working:
             conf["instrumentation"]["path"] = working
+        if include:
+            conf["instrumentation"]["include"] = include
         if exclude:
             conf["instrumentation"]["exclude"] = exclude
         if runner:
@@ -284,6 +296,8 @@ class Config:
             conf["events"]["failing"] = ",".join(e.path for e in self.failing)
         if self.instrument_working:
             conf["instrumentation"]["path"] = str(self.instrument_working)
+        if self.instrument_include:
+            conf["instrumentation"]["include"] = ",".join(self.instrument_include)
         if self.instrument_exclude:
             conf["instrumentation"]["exclude"] = ",".join(self.instrument_exclude)
         if self.runner:

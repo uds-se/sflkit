@@ -2,7 +2,7 @@ import os
 import queue
 import re
 import shutil
-from typing import List
+from typing import List, Optional, Iterable, Tuple
 
 from sflkit.instrumentation import Instrumentation
 from sflkit.instrumentation.file_instrumentation import FileInstrumentation
@@ -15,13 +15,52 @@ class DirInstrumentation(Instrumentation):
         super().__init__(visitor)
         self.file_instrumentation = FileInstrumentation(visitor)
 
+    def check_included(self, element: str, includes: Optional[Iterable[str]]):
+        return includes is None or any(
+            re.match(include, element) for include in includes
+        )
+
+    def handle_element(
+        self,
+        element: str,
+        file_queue: queue.Queue[Tuple[str, bool]],
+        src: os.PathLike,
+        dst: os.PathLike,
+        suffixes: List[str],
+        check: bool,
+    ):
+        if os.path.isdir(os.path.join(src, element)):
+            LOGGER.debug(f"I found a subdir at {element}.")
+            os.makedirs(os.path.join(dst, element), exist_ok=True)
+            for f in os.listdir(os.path.join(src, element)):
+                file_queue.put((os.path.join(element, f), check))
+        elif (
+            not check
+            and any(element.endswith(f".{suffix}") for suffix in suffixes)
+            and not os.path.islink(os.path.join(src, element))
+        ):
+            LOGGER.debug(f"I found a file I can instrument at {element}.")
+            self.file_instrumentation.instrument(
+                os.path.join(src, element),
+                os.path.join(dst, element),
+                file=element,
+            )
+        else:
+            LOGGER.debug(f"I found a file I will not instrument at {element}.")
+            shutil.copy(
+                os.path.join(src, element),
+                os.path.join(dst, element),
+                follow_symlinks=False,
+            )
+
     def instrument(
         self,
-        src: str,
-        dst: str,
+        src: os.PathLike,
+        dst: os.PathLike,
         suffixes: List[str] = None,
         file: str = "",
-        excludes: list = None,
+        includes: Optional[Iterable[str]] = None,
+        excludes: Optional[Iterable[str]] = None,
     ):
         if suffixes is None:
             raise ValueError("DirInstrumentation requires suffixes")
@@ -42,10 +81,12 @@ class DirInstrumentation(Instrumentation):
         else:
             os.makedirs(dst, exist_ok=True)
             file_queue = queue.Queue()
-            file_queue.put("")
+            file_queue.put(("", True))
             while not file_queue.empty():
-                element = file_queue.get()
-                if any(re.match(exclude, element) for exclude in excludes):
+                element, check = file_queue.get()
+                if check and self.check_included(element, includes):
+                    self.handle_element(element, file_queue, src, dst, suffixes, False)
+                elif any(re.match(exclude, element) for exclude in excludes):
                     if os.path.isdir(os.path.join(src, element)):
                         shutil.copytree(
                             os.path.join(src, element),
@@ -59,26 +100,7 @@ class DirInstrumentation(Instrumentation):
                             follow_symlinks=False,
                         )
                     continue
-                if os.path.isdir(os.path.join(src, element)):
-                    LOGGER.debug(f"I found a subdir at {element}.")
-                    os.makedirs(os.path.join(dst, element), exist_ok=True)
-                    for f in os.listdir(os.path.join(src, element)):
-                        file_queue.put(os.path.join(element, f))
-                elif any(
-                    element.endswith(f".{suffix}") for suffix in suffixes
-                ) and not os.path.islink(os.path.join(src, element)):
-                    LOGGER.debug(f"I found a file I can instrument at {element}.")
-                    self.file_instrumentation.instrument(
-                        os.path.join(src, element),
-                        os.path.join(dst, element),
-                        file=element,
-                    )
                 else:
-                    LOGGER.debug(f"I found a file I will not instrument at {element}.")
-                    shutil.copy(
-                        os.path.join(src, element),
-                        os.path.join(dst, element),
-                        follow_symlinks=False,
-                    )
+                    self.handle_element(element, file_queue, src, dst, suffixes, check)
             self.events = self.file_instrumentation.events
         LOGGER.info(f"I found {len(self.events)} events in {src}.")
