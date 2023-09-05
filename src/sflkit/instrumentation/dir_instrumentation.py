@@ -15,10 +15,9 @@ class DirInstrumentation(Instrumentation):
         super().__init__(visitor)
         self.file_instrumentation = FileInstrumentation(visitor)
 
-    def check_included(self, element: str, includes: Optional[Iterable[str]]):
-        return includes is None or any(
-            re.match(include, element) for include in includes
-        )
+    @staticmethod
+    def check_included(element: str, includes: Optional[Iterable[str]]):
+        return not includes or any(re.match(include, element) for include in includes)
 
     def handle_element(
         self,
