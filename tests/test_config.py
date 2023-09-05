@@ -93,6 +93,7 @@ class ConfigTests(unittest.TestCase):
             config.visitor,
             config.passing,
             config.failing,
+            config.instrument_include,
             config.instrument_exclude,
             config.instrument_working,
             config.runner,
