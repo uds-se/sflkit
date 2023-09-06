@@ -100,7 +100,8 @@ def split(s: str, sep: str = ",", esc: str = "\"'"):
 
 
 class PytestTree:
-    def __init__(self):
+    def __init__(self, base: Optional[os.PathLike] = None):
+        self.base = base
         self.roots: List[PytestNode] = []
 
     @staticmethod
@@ -248,6 +249,9 @@ class PytestRunner(Runner):
         c = []
         if base:
             c.append(base)
+            root_dir = directory / base
+        else:
+            root_dir = directory
         output = subprocess.run(
             [
                 "python",
@@ -261,7 +265,7 @@ class PytestRunner(Runner):
             cwd=directory,
         ).stdout.decode("utf-8")
         tree = PytestTree()
-        tree.parse(output, directory=directory)
+        tree.parse(output, directory=root_dir)
         return list(map(str, tree.visit()))
 
     @staticmethod
