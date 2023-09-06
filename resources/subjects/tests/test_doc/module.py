@@ -14,3 +14,8 @@ class B:
     """
     DOC B
     """
+
+    def c(self):
+        """
+        DOC C
+        """

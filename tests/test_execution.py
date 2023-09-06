@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+from sflkitlib.events import EventType
+
 from sflkit import instrument_config
 from sflkit.config import Config
 from utils import BaseTest
@@ -37,7 +39,7 @@ class EventTests(BaseTest):
         config = Config.create(
             path=os.path.join(self.TEST_RESOURCES, "test_doc"),
             language="python",
-            events="line",
+            events=",".join(e.name.lower() for e in EventType),
             working=self.TEST_DIR,
         )
         instrument_config(config)

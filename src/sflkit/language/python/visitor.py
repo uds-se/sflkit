@@ -40,9 +40,7 @@ class PythonInstrumentation(NodeTransformer, ASTVisitor):
     def __create_node(self, injection: Injection, node: AST, body=False, doc=None):
         doc = doc if doc else list()
         if injection.body:
-            node.body = doc + injection.body + node.body
-        elif doc and hasattr(node, "body"):
-            node.body = doc + node.body
+            node.body = injection.body + node.body
         if injection.body_last:
             node.body += injection.body_last
         if injection.orelse:
@@ -57,12 +55,14 @@ class PythonInstrumentation(NodeTransformer, ASTVisitor):
                 node.finalbody = injection.finalbody + node.finalbody
             else:
                 if body:
-                    node.body = Try(
-                        body=node.body,
-                        handlers=[],
-                        orelse=[],
-                        finalbody=injection.finalbody,
-                    )
+                    node.body = [
+                        Try(
+                            body=node.body,
+                            handlers=[],
+                            orelse=[],
+                            finalbody=injection.finalbody,
+                        )
+                    ]
                 else:
                     node = Try(
                         body=[node],
@@ -110,6 +110,8 @@ class PythonInstrumentation(NodeTransformer, ASTVisitor):
                     orelse=[],
                     finalbody=[],
                 )
+        if doc and hasattr(node, "body"):
+            node.body = doc + node.body
         if injection.pre or injection.post:
             return Module(
                 body=injection.pre + [node] + injection.post,
