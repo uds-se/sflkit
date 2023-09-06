@@ -1,8 +1,6 @@
 from ast import *
 from typing import Any, Union
 
-import astor
-
 from sflkit.language.meta import MetaVisitor, Injection
 from sflkit.language.python.extract import PythonIsDoc
 from sflkit.language.python.factory import python_lib
@@ -37,7 +35,7 @@ class PythonInstrumentation(NodeTransformer, ASTVisitor):
         )
 
     def unparse(self, ast):
-        return astor.to_source(ast)
+        return unparse(ast)
 
     def __create_node(self, injection: Injection, node: AST, body=False, doc=None):
         doc = doc if doc else list()
@@ -51,9 +49,9 @@ class PythonInstrumentation(NodeTransformer, ASTVisitor):
             node.orelse = injection.orelse + node.orelse
         if injection.assign:
             if hasattr(node, "value"):
-                node.value = Name(id=injection.assign)
+                node.value = injection.assign
             elif hasattr(node, "test"):
-                node.test = Name(id=injection.assign)
+                node.test = injection.assign
         if injection.finalbody:
             if hasattr(node, "finalbody"):
                 node.finalbody = injection.finalbody + node.finalbody
@@ -81,7 +79,7 @@ class PythonInstrumentation(NodeTransformer, ASTVisitor):
                 )
             ]
             if body:
-                node.body = (
+                node.body = [
                     Try(
                         body=node.body,
                         handlers=[
@@ -95,24 +93,22 @@ class PythonInstrumentation(NodeTransformer, ASTVisitor):
                         ],
                         orelse=[],
                         finalbody=[],
-                    ),
-                )
+                    )
+                ]
             else:
-                node = (
-                    Try(
-                        body=[node],
-                        handlers=[
-                            ExceptHandler(
-                                type=Name(
-                                    id="BaseException",
-                                ),
-                                name=error_var,
-                                body=injection.error + raise_stmt,
-                            )
-                        ],
-                        orelse=[],
-                        finalbody=[],
-                    ),
+                node = Try(
+                    body=[node],
+                    handlers=[
+                        ExceptHandler(
+                            type=Name(
+                                id="BaseException",
+                            ),
+                            name=error_var,
+                            body=injection.error + raise_stmt,
+                        )
+                    ],
+                    orelse=[],
+                    finalbody=[],
                 )
         if injection.pre or injection.post:
             return Module(

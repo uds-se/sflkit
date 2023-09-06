@@ -173,6 +173,7 @@ class PythonConditionExtract(ast.NodeVisitor, ConditionExtract):
                         ],
                         value=val,
                         type_comment=None,
+                        lineno=0,
                     ),
                     self.factory.get_event_call(e),
                 ],
