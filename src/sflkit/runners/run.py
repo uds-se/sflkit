@@ -175,7 +175,7 @@ class PytestTree:
     def _common_base(self, directory: Path) -> Path:
         parts = directory.parts
         common_bases = {Path(*parts[:i]) for i in range(1, len(parts) + 1)}
-        roots_paths = [Path(r.name) for r in self.roots]
+        roots_paths = [Path(r.name) for r in self.visit()]
         common_bases = set(
             filter(
                 lambda p: all(map(lambda r: Path(p, *r.parts).exists(), roots_paths)),
