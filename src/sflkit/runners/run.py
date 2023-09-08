@@ -37,6 +37,9 @@ class PytestNode(abc.ABC):
     def visit(self) -> List[Any]:
         pass
 
+    def get_path(self) -> str:
+        return ""
+
 
 class Root(PytestNode):
     def visit(self) -> List[Any]:
@@ -59,6 +62,9 @@ class Package(PytestNode):
         else:
             return self.name
 
+    def get_path(self) -> str:
+        return self.__repr__()
+
 
 class Module(PytestNode):
     def visit(self) -> List[Any]:
@@ -73,6 +79,9 @@ class Module(PytestNode):
         else:
             return self.name
 
+    def get_path(self) -> str:
+        return self.__repr__()
+
 
 class Class(PytestNode):
     def visit(self) -> List[Any]:
@@ -84,6 +93,12 @@ class Class(PytestNode):
         else:
             return f"::{self.name}"
 
+    def get_path(self) -> str:
+        if self.parent:
+            return self.parent.get_path()
+        else:
+            return ""
+
 
 class Function(PytestNode):
     def visit(self) -> List[Any]:
@@ -94,6 +109,12 @@ class Function(PytestNode):
             return f"{repr(self.parent)}::{self.name}"
         else:
             return f"::{self.name}"
+
+    def get_path(self) -> str:
+        if self.parent:
+            return self.parent.get_path()
+        else:
+            return ""
 
 
 def split(s: str, sep: str = ",", esc: str = "\"'"):
@@ -175,7 +196,7 @@ class PytestTree:
     def _common_base(self, directory: Path) -> Path:
         parts = directory.parts
         common_bases = {Path(*parts[:i]) for i in range(1, len(parts) + 1)}
-        roots_paths = [Path(r.name) for r in self.visit()]
+        roots_paths = {Path(r.get_path()) for r in self.visit()}
         common_bases = set(
             filter(
                 lambda p: all(map(lambda r: Path(p, *r.parts).exists(), roots_paths)),
