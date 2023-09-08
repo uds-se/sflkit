@@ -193,7 +193,7 @@ class PytestTree:
                     current_node = node
                     current_level = level
 
-    def _common_base(self, directory: Path) -> Path:
+    def _common_base(self, directory: Path) -> Tuple[Path, Path]:
         parts = directory.parts
         common_bases = {Path(*parts[:i]) for i in range(1, len(parts) + 1)}
         roots_paths = {Path(r.get_path()) for r in self.visit()}
@@ -204,26 +204,33 @@ class PytestTree:
             )
         )
         common = os.path.commonpath(roots_paths)
-        common_bases = set(map(lambda p: p / common, common_bases))
         for cb in common_bases:
-            return cb
+            return cb, cb / common
         else:
-            return None
+            return None, None
 
     def parse(
         self, output, directory: Optional[Path] = None, root_dir: Optional[Path] = None
     ):
         self._parse(output)
         if directory:
-            base = self._common_base(directory)
+            base, common = self._common_base(directory)
             if base is None and root_dir:
-                base = self._common_base(root_dir)
+                base, common = self._common_base(root_dir)
                 if base is None and self.root_dir:
-                    base = self._common_base(self.root_dir)
+                    base, common = self._common_base(self.root_dir)
             if base is not None:
-                root = Root(str(base.relative_to(directory)))
+                if common.samefile(directory):
+                    root = Root(".")
+                else:
+                    root = Root(str(common.relative_to(directory)))
                 for r in self.roots:
-                    r.skip = True
+                    absolute = base / r.name
+                    if absolute.samefile(common):
+                        r.skip = True
+                        r.name = ""
+                    else:
+                        r.name = str(absolute.relative_to(common))
                     r.parent = root
                     root.children.append(r)
                 self.roots = [root]
