@@ -1,5 +1,6 @@
 import abc
 import enum
+import hashlib
 import os
 import re
 import shutil
@@ -271,6 +272,10 @@ class Runner(abc.ABC):
 
     @staticmethod
     def safe(s: str):
+        s = s.encode("ascii", "ignore")
+        if len(s) > 255:
+            return hashlib.md5(s).hexdigest()
+        s = s.decode("ascii")
         for c in string.punctuation:
             if c in s:
                 s = s.replace(c, "_")
