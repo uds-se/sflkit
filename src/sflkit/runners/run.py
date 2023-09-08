@@ -116,6 +116,7 @@ def split(s: str, sep: str = ",", esc: str = "\"'"):
 
 class PytestTree:
     def __init__(self, base: Optional[os.PathLike] = None):
+        self.root_dir: Optional[Path] = None
         self.base = base
         self.roots: List[PytestNode] = []
 
@@ -131,24 +132,12 @@ class PytestTree:
             s = s[1:-1].replace("\\\\", "\\")
         return s
 
-    def parse(self, output: str, directory: Path = None, root_dir: Path = None):
+    def _parse(self, output: str):
         current_level = 0
         current_node = None
-        if root_dir is not None:
-            root_node = Root(str(root_dir))
-            self.roots.append(root_node)
-        else:
-            root_node = None
-        directory = None if directory is None else directory.absolute()
-        first = True
         for line in output.split("\n"):
-            if (
-                root_dir is None
-                and line.startswith("rootdir: ")
-                and directory is not None
-            ):
-                root_dir = Path(split(line)[0].replace("rootdir: ", "")).absolute()
-                current_node = Root(str(root_dir))
+            if line.startswith("rootdir: "):
+                self.root_dir = Path(split(line)[0].replace("rootdir: ", "")).absolute()
             match = PYTEST_COLLECT_PATTERN.search(line)
             if match:
                 level = self._count_spaces(line) // 2
@@ -156,28 +145,8 @@ class PytestTree:
                 skip = False
                 if match.group("kind") == "Package":
                     node_class = Package
-                    if (
-                        first
-                        and root_dir
-                        and name == root_dir.parts[-1]
-                        and not (root_dir / name).exists()
-                    ):
-                        skip = True
-                    first = False
-                    if not skip and directory:
-                        name = str(root_dir / name)
                 elif match.group("kind") == "Module":
                     node_class = Module
-                    if (
-                        first
-                        and root_dir
-                        and name == root_dir.parts[-1]
-                        and not (root_dir / name).exists()
-                    ):
-                        skip = True
-                    first = False
-                    if not skip and directory:
-                        name = str(root_dir / name)
                 elif match.group("kind") in ("Class", "UnitTestCase"):
                     node_class = Class
                 elif match.group("kind") in ("Function", "TestCaseFunction"):
@@ -188,11 +157,7 @@ class PytestTree:
                 if level == 0:
                     current_node = node
                     current_level = 0
-                    if root_node:
-                        node.parent = root_node
-                        root_node.children.append(node)
-                    else:
-                        self.roots.append(node)
+                    self.roots.append(node)
                 elif level > current_level:
                     current_node.children.append(node)
                     node.parent = current_node
@@ -202,12 +167,45 @@ class PytestTree:
                     for _ in range(current_level - level + 1):
                         if current_node.parent:
                             current_node = current_node.parent
-                        else:
-                            current_node = root_node
                     current_node.children.append(node)
                     node.parent = current_node
                     current_node = node
                     current_level = level
+
+    def _common_base(self, directory: Path) -> Path:
+        parts = directory.parts
+        common_bases = {Path(*parts[:i]) for i in range(1, len(parts) + 1)}
+        roots_paths = [Path(r.name) for r in self.roots]
+        common_bases = set(
+            filter(
+                lambda p: all(map(lambda r: Path(p, *r.parts).exists(), roots_paths)),
+                common_bases,
+            )
+        )
+        common = os.path.commonpath(roots_paths)
+        common_bases = set(map(lambda p: p / common, common_bases))
+        for cb in common_bases:
+            return cb
+        else:
+            return None
+
+    def parse(
+        self, output, directory: Optional[Path] = None, root_dir: Optional[Path] = None
+    ):
+        self._parse(output)
+        if directory:
+            base = self._common_base(directory)
+            if base is None and root_dir:
+                base = self._common_base(root_dir)
+                if base is None and self.root_dir:
+                    base = self._common_base(self.root_dir)
+            if base is not None:
+                root = Root(str(base.relative_to(directory)))
+                for r in self.roots:
+                    r.skip = True
+                    r.parent = root
+                    root.children.append(r)
+                self.roots = [root]
 
     def visit(self):
         return sum([node.visit() for node in self.roots], start=[])
@@ -295,6 +293,7 @@ class PytestRunner(Runner):
         environ: Environment = None,
     ) -> List[str]:
         c = []
+        directory = directory.absolute()
         if base:
             c.append(base)
             root_dir = directory / base
