@@ -12,6 +12,7 @@ from sflkit.runners.run import (
     Function,
     PytestRunner,
     InputRunner,
+    Root,
 )
 from tests.utils import BaseTest
 
@@ -50,9 +51,18 @@ class RunnerTests(BaseTest):
 
     def test_pytest_tree_parser(self):
         tree = PytestTree()
-        tree.parse(self.PYTEST_COLLECT)
+        tree.parse(
+            self.PYTEST_COLLECT, root_dir=Path("/", "Users", "test", "test", "tests")
+        )
         self.assertEqual(1, len(tree.roots))
-        package_tests = tree.roots[0]
+        root_node = tree.roots[0]
+        self.assertIsInstance(root_node, Root)
+        self.assertEqual(1, len(root_node.children))
+        self.assertEqual(
+            os.path.join("/", "Users", "test", "test", "tests"), root_node.name
+        )
+
+        package_tests = root_node.children[0]
         self.assertIsInstance(package_tests, Package)
         self.assertEqual(2, len(package_tests.children))
         self.assertEqual("tests", package_tests.name)

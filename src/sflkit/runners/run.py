@@ -21,10 +21,11 @@ DEFAULT_TIMEOUT = 10
 
 
 class PytestNode(abc.ABC):
-    def __init__(self, name: str, parent=None):
+    def __init__(self, name: str, parent=None, skip: bool = False):
         self.name = name
         self.parent: Optional[PytestNode] = parent
         self.children: List[PytestNode] = []
+        self.skip = skip
 
     def __repr__(self):
         return self.name
@@ -37,13 +38,24 @@ class PytestNode(abc.ABC):
         pass
 
 
+class Root(PytestNode):
+    def visit(self) -> List[Any]:
+        return sum([node.visit() for node in self.children], start=[])
+
+    def __repr__(self):
+        return self.name
+
+
 class Package(PytestNode):
     def visit(self) -> List[Any]:
         return sum([node.visit() for node in self.children], start=[])
 
     def __repr__(self):
         if self.parent:
-            return os.path.join(repr(self.parent), self.name)
+            if self.skip:
+                return repr(self.parent)
+            else:
+                return os.path.join(repr(self.parent), self.name)
         else:
             return self.name
 
@@ -54,7 +66,10 @@ class Module(PytestNode):
 
     def __repr__(self):
         if self.parent:
-            return os.path.join(repr(self.parent), self.name)
+            if self.skip:
+                return repr(self.parent)
+            else:
+                return os.path.join(repr(self.parent), self.name)
         else:
             return self.name
 
@@ -116,37 +131,68 @@ class PytestTree:
             s = s[1:-1].replace("\\\\", "\\")
         return s
 
-    def parse(self, output: str, directory: Path = None):
+    def parse(self, output: str, directory: Path = None, root_dir: Path = None):
         current_level = 0
         current_node = None
-        root_dir = Path.cwd() if directory is None else directory
+        if root_dir is not None:
+            root_node = Root(str(root_dir))
+            self.roots.append(root_node)
+        else:
+            root_node = None
         directory = None if directory is None else directory.absolute()
+        first = True
         for line in output.split("\n"):
-            if line.startswith("rootdir: ") and directory is not None:
+            if (
+                root_dir is None
+                and line.startswith("rootdir: ")
+                and directory is not None
+            ):
                 root_dir = Path(split(line)[0].replace("rootdir: ", "")).absolute()
+                current_node = Root(str(root_dir))
             match = PYTEST_COLLECT_PATTERN.search(line)
             if match:
                 level = self._count_spaces(line) // 2
                 name = self._clear_name(match.group("name"))
+                skip = False
                 if match.group("kind") == "Package":
                     node_class = Package
-                    if directory:
-                        name = str((root_dir / name).relative_to(directory))
+                    if (
+                        first
+                        and root_dir
+                        and name == root_dir.parts[-1]
+                        and not (root_dir / name).exists()
+                    ):
+                        skip = True
+                    first = False
+                    if not skip and directory:
+                        name = str(root_dir / name)
                 elif match.group("kind") == "Module":
                     node_class = Module
-                    if directory:
-                        name = str((root_dir / name).relative_to(directory))
+                    if (
+                        first
+                        and root_dir
+                        and name == root_dir.parts[-1]
+                        and not (root_dir / name).exists()
+                    ):
+                        skip = True
+                    first = False
+                    if not skip and directory:
+                        name = str(root_dir / name)
                 elif match.group("kind") in ("Class", "UnitTestCase"):
                     node_class = Class
                 elif match.group("kind") in ("Function", "TestCaseFunction"):
                     node_class = Function
                 else:
                     continue
-                node = node_class(name)
+                node = node_class(name, skip=skip)
                 if level == 0:
                     current_node = node
                     current_level = 0
-                    self.roots.append(node)
+                    if root_node:
+                        node.parent = root_node
+                        root_node.children.append(node)
+                    else:
+                        self.roots.append(node)
                 elif level > current_level:
                     current_node.children.append(node)
                     node.parent = current_node
@@ -156,6 +202,8 @@ class PytestTree:
                     for _ in range(current_level - level + 1):
                         if current_node.parent:
                             current_node = current_node.parent
+                        else:
+                            current_node = root_node
                     current_node.children.append(node)
                     node.parent = current_node
                     current_node = node
@@ -251,7 +299,7 @@ class PytestRunner(Runner):
             c.append(base)
             root_dir = directory / base
         else:
-            root_dir = directory
+            root_dir = None
         output = subprocess.run(
             [
                 "python",
@@ -265,7 +313,7 @@ class PytestRunner(Runner):
             cwd=directory,
         ).stdout.decode("utf-8")
         tree = PytestTree()
-        tree.parse(output, directory=root_dir)
+        tree.parse(output, directory=directory, root_dir=root_dir)
         return list(map(str, tree.visit()))
 
     @staticmethod
