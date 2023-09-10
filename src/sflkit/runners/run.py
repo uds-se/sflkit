@@ -188,14 +188,14 @@ class PytestTree:
     def _common_base(self, directory: Path) -> Tuple[Path, Path]:
         parts = directory.parts
         common_bases = {Path(*parts[:i]) for i in range(1, len(parts) + 1)}
-        roots_paths = {Path(r.get_path()) for r in self.visit()}
+        leaves_paths = {Path(r.get_path()) for r in self.visit()}
         common_bases = set(
             filter(
-                lambda p: all(map(lambda r: Path(p, *r.parts).exists(), roots_paths)),
+                lambda p: all(map(lambda r: Path(p, *r.parts).exists(), leaves_paths)),
                 common_bases,
             )
         )
-        common = os.path.commonpath(roots_paths)
+        common = os.path.commonpath({Path(r.get_path()) for r in self.roots})
         for cb in common_bases:
             return cb, cb / common
         else:
