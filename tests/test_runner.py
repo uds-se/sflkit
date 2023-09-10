@@ -130,7 +130,9 @@ class RunnerTests(BaseTest):
         instrument_config(config)
         runner = PytestRunner()
         output = Path(BaseTest.TEST_DIR, "events").absolute()
-        runner.run(Path(BaseTest.TEST_DIR), output)
+        runner.run(
+            Path(BaseTest.TEST_DIR), output, files=[Path("tests", "test_middle.py")]
+        )
         self.assertPathExists(output)
         self.assertPathExists(output / "passing")
         self.assertPathExists(output / "failing")

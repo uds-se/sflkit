@@ -50,7 +50,7 @@ class Root(PytestNode):
         return self.name
 
 
-class Package(PytestNode):
+class Structure(PytestNode):
     def visit(self) -> List[Any]:
         return sum([node.visit() for node in self.children], start=[])
 
@@ -67,21 +67,12 @@ class Package(PytestNode):
         return self.__repr__()
 
 
-class Module(PytestNode):
-    def visit(self) -> List[Any]:
-        return sum([node.visit() for node in self.children], start=[])
+class Package(Structure):
+    pass
 
-    def __repr__(self):
-        if self.parent:
-            if self.skip:
-                return repr(self.parent)
-            else:
-                return os.path.join(repr(self.parent), self.name)
-        else:
-            return self.name
 
-    def get_path(self) -> str:
-        return self.__repr__()
+class Module(Structure):
+    pass
 
 
 class Class(PytestNode):
@@ -257,6 +248,7 @@ class Runner(abc.ABC):
     def get_tests(
         self,
         directory: Path,
+        files: Optional[List[os.PathLike] | os.PathLike] = None,
         base: Optional[os.PathLike] = None,
         environ: Environment = None,
     ) -> List[str]:
@@ -303,13 +295,16 @@ class Runner(abc.ABC):
         self,
         directory: Path,
         output: Path,
+        files: Optional[List[os.PathLike] | os.PathLike] = None,
         base: Optional[os.PathLike] = None,
         environ: Environment = None,
     ):
         self.run_tests(
             directory,
             output,
-            self.filter_tests(self.get_tests(directory, base=base, environ=environ)),
+            self.filter_tests(
+                self.get_tests(directory, files=files, base=base, environ=environ)
+            ),
             environ=environ,
         )
 
@@ -322,13 +317,20 @@ class PytestRunner(Runner):
     def get_tests(
         self,
         directory: Path,
+        files: Optional[List[os.PathLike] | os.PathLike] = None,
         base: Optional[os.PathLike] = None,
         environ: Environment = None,
     ) -> List[str]:
         c = []
         directory = directory.absolute()
+        if files:
+            if isinstance(files, (str, os.PathLike)):
+                c.append(files)
+            else:
+                c += files
         if base:
-            c.append(base)
+            if not files:
+                c.append(base)
             root_dir = directory / base
         else:
             root_dir = None
@@ -417,6 +419,7 @@ class InputRunner(Runner):
     def get_tests(
         self,
         directory: Path,
+        files: Optional[List[os.PathLike] | os.PathLike] = None,
         base: Optional[os.PathLike] = None,
         environ: Environment = None,
     ) -> List[str]:
