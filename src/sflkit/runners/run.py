@@ -163,7 +163,7 @@ class PytestRunner(Runner):
             env=environ,
             cwd=directory,
         ).stdout.decode("utf-8")
-        tests = output.split("\n")[:-2]
+        tests = output.split("\n\n", 1)[0].split("\n")
         if tests[-1] == "":
             tests = tests[:-1]
         return self._normalize_paths(tests, directory, root_dir)
@@ -247,7 +247,7 @@ class InputRunner(Runner):
 
     def _prepare_tests(self, tests: List[str | List[str]], prefix: str):
         return {
-            f"{prefix}_{i}": (test if isinstance(test, list) else self._split("\n"))
+            f"{prefix}_{i}": (test if isinstance(test, list) else self.split("\n"))
             for i, test in enumerate(tests)
         }
 
