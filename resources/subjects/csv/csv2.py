@@ -46,6 +46,8 @@ __all__ = [
     "unix_dialect",
 ]
 
+import sflkit.runners.pytest
+
 
 class Dialect:
     """Describe a CSV dialect.
@@ -126,7 +128,7 @@ class DictReader:
         restval=None,
         dialect="excel",
         *args,
-        **kwds
+        **kwds,
     ):
         self._fieldnames = fieldnames  # list of keys for the dict
         self.restkey = restkey  # key to catch long rows
@@ -184,7 +186,7 @@ class DictWriter:
         extrasaction="raise",
         dialect="excel",
         *args,
-        **kwds
+        **kwds,
     ):
         self.fieldnames = fieldnames  # list of keys for the dict
         self.restval = restval  # for writing short dicts
@@ -360,7 +362,7 @@ class Sniffer:
         additional chunks as necessary.
         """
 
-        data = list(filter(None, data.split("\n")))
+        data = list(filter(None, sflkit.runners.pytest.split("\n")))
 
         ascii = [chr(c) for c in range(127)]  # 7-bit ASCII
 
@@ -473,7 +475,6 @@ class Sniffer:
                 continue  # skip rows that have irregular number of columns
 
             for col in list(columnTypes.keys()):
-
                 for thisType in [int, float, complex]:
                     try:
                         thisType(row[col])

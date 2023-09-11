@@ -7,228 +7,15 @@ import shutil
 import string
 import subprocess
 from pathlib import Path
-from typing import List, Dict, Optional, Any, Tuple
+from typing import List, Dict, Optional, Tuple
 
 Environment = Dict[str, str]
 
-PYTEST_COLLECT_PATTERN = re.compile(
-    '<(?P<kind>Package|Module|Class|Function|UnitTestCase|TestCaseFunction) (?P<name>[^>]+|"([^"]|\\")+")>'
-)
 PYTEST_RESULT_PATTERN = re.compile(
     rb"= ((((?P<f>\d+) failed)|((?P<p>\d+) passed)|(\d+ warnings?))(, )?)+ in "
 )
 
 DEFAULT_TIMEOUT = 10
-
-
-class PytestNode(abc.ABC):
-    def __init__(self, name: str, parent=None, skip: bool = False):
-        self.name = name
-        self.parent: Optional[PytestNode] = parent
-        self.children: List[PytestNode] = []
-        self.skip = skip
-
-    def __repr__(self):
-        return self.name
-
-    def __str__(self):
-        return self.__repr__()
-
-    @abc.abstractmethod
-    def visit(self) -> List[Any]:
-        pass
-
-    def get_path(self) -> str:
-        return ""
-
-
-class Root(PytestNode):
-    def visit(self) -> List[Any]:
-        return sum([node.visit() for node in self.children], start=[])
-
-    def __repr__(self):
-        return self.name
-
-
-class Structure(PytestNode):
-    def visit(self) -> List[Any]:
-        return sum([node.visit() for node in self.children], start=[])
-
-    def __repr__(self):
-        if self.parent:
-            if self.skip:
-                return repr(self.parent)
-            else:
-                return os.path.join(repr(self.parent), self.name)
-        else:
-            return self.name
-
-    def get_path(self) -> str:
-        return self.__repr__()
-
-
-class Package(Structure):
-    pass
-
-
-class Module(Structure):
-    pass
-
-
-class Class(PytestNode):
-    def visit(self) -> List[Any]:
-        return sum([node.visit() for node in self.children], start=[])
-
-    def __repr__(self):
-        if self.parent:
-            return f"{repr(self.parent)}::{self.name}"
-        else:
-            return f"::{self.name}"
-
-    def get_path(self) -> str:
-        if self.parent:
-            return self.parent.get_path()
-        else:
-            return ""
-
-
-class Function(PytestNode):
-    def visit(self) -> List[Any]:
-        return [self] + sum([node.visit() for node in self.children], start=[])
-
-    def __repr__(self):
-        if self.parent:
-            return f"{repr(self.parent)}::{self.name}"
-        else:
-            return f"::{self.name}"
-
-    def get_path(self) -> str:
-        if self.parent:
-            return self.parent.get_path()
-        else:
-            return ""
-
-
-def split(s: str, sep: str = ",", esc: str = "\"'"):
-    values = list()
-    current = ""
-    escape = None
-    for c in s:
-        if c == escape:
-            escape = None
-        elif escape is None and c in esc:
-            escape = c
-        elif escape is None and c in sep:
-            values.append(current)
-            current = ""
-            continue
-        current += c
-    values.append(current)
-    return values
-
-
-class PytestTree:
-    def __init__(self, base: Optional[os.PathLike] = None):
-        self.root_dir: Optional[Path] = None
-        self.base = base
-        self.roots: List[PytestNode] = []
-
-    @staticmethod
-    def _count_spaces(s: str):
-        return len(s) - len(s.lstrip())
-
-    @staticmethod
-    def _clear_name(s: str):
-        if (s.startswith('"') and s.endswith('"')) or (
-            s.startswith("'") and s.endswith("'")
-        ):
-            s = s[1:-1].replace("\\\\", "\\")
-        return s
-
-    def _parse(self, output: str):
-        current_level = 0
-        current_node = None
-        for line in output.split("\n"):
-            if line.startswith("rootdir: "):
-                self.root_dir = Path(split(line)[0].replace("rootdir: ", "")).absolute()
-            match = PYTEST_COLLECT_PATTERN.search(line)
-            if match:
-                level = self._count_spaces(line) // 2
-                name = self._clear_name(match.group("name"))
-                skip = False
-                if match.group("kind") == "Package":
-                    node_class = Package
-                elif match.group("kind") == "Module":
-                    node_class = Module
-                elif match.group("kind") in ("Class", "UnitTestCase"):
-                    node_class = Class
-                elif match.group("kind") in ("Function", "TestCaseFunction"):
-                    node_class = Function
-                else:
-                    continue
-                node = node_class(name, skip=skip)
-                if level == 0:
-                    current_node = node
-                    current_level = 0
-                    self.roots.append(node)
-                elif level > current_level:
-                    current_node.children.append(node)
-                    node.parent = current_node
-                    current_node = node
-                    current_level = level
-                else:
-                    for _ in range(current_level - level + 1):
-                        if current_node.parent:
-                            current_node = current_node.parent
-                    current_node.children.append(node)
-                    node.parent = current_node
-                    current_node = node
-                    current_level = level
-
-    def _common_base(self, directory: Path) -> Tuple[Path, Path]:
-        parts = directory.parts
-        common_bases = {Path(*parts[:i]) for i in range(1, len(parts) + 1)}
-        leaves_paths = {Path(r.get_path()) for r in self.visit()}
-        common_bases = set(
-            filter(
-                lambda p: all(map(lambda r: Path(p, *r.parts).exists(), leaves_paths)),
-                common_bases,
-            )
-        )
-        common = os.path.commonpath({Path(r.get_path()) for r in self.roots})
-        for cb in common_bases:
-            return cb, cb / common
-        else:
-            return None, None
-
-    def parse(
-        self, output, directory: Optional[Path] = None, root_dir: Optional[Path] = None
-    ):
-        self._parse(output)
-        if directory:
-            base, common = self._common_base(directory)
-            if base is None and root_dir:
-                base, common = self._common_base(root_dir)
-                if base is None and self.root_dir:
-                    base, common = self._common_base(self.root_dir)
-            if base is not None:
-                if common.samefile(directory):
-                    root = Root(".")
-                else:
-                    root = Root(str(common.relative_to(directory)))
-                for r in self.roots:
-                    absolute = base / r.name
-                    if absolute.samefile(common):
-                        r.skip = True
-                        r.name = ""
-                    else:
-                        r.name = str(absolute.relative_to(common))
-                    r.parent = root
-                    root.children.append(r)
-                self.roots = [root]
-
-    def visit(self):
-        return sum([node.visit() for node in self.roots], start=[])
 
 
 class TestResult(enum.Enum):
@@ -314,6 +101,42 @@ class VoidRunner(Runner):
 
 
 class PytestRunner(Runner):
+    @staticmethod
+    def _common_base(directory: Path, tests: List[str]) -> Path:
+        parts = directory.parts
+        common_bases = {Path(*parts[:i]) for i in range(1, len(parts) + 1)}
+        leaves_paths = {Path(r.split("::")[0]) for r in tests}
+        common_bases = set(
+            filter(
+                lambda p: all(map(lambda r: Path(p, *r.parts).exists(), leaves_paths)),
+                common_bases,
+            )
+        )
+        for cb in common_bases:
+            return cb
+        else:
+            return None
+
+    def _normalize_paths(
+        self,
+        tests: List[str],
+        directory: Optional[Path] = None,
+        root_dir: Optional[Path] = None,
+    ):
+        result = tests
+        if directory:
+            base = self._common_base(directory, tests)
+            if base is None and root_dir:
+                base = self._common_base(root_dir, tests)
+            if base is not None:
+                result = []
+                for r in tests:
+                    path, test = r.split("::", 1)
+                    result.append(
+                        str((base / path).relative_to(directory)) + "::" + test
+                    )
+        return result
+
     def get_tests(
         self,
         directory: Path,
@@ -333,22 +156,17 @@ class PytestRunner(Runner):
                 c.append(base)
             root_dir = directory / base
         else:
-            root_dir = None
+            root_dir = directory
         output = subprocess.run(
-            [
-                "python",
-                "-m",
-                "pytest",
-                "--collect-only",
-            ]
-            + c,
+            ["python", "-m", "pytest", "--collect-only", "-q"] + c,
             stdout=subprocess.PIPE,
             env=environ,
             cwd=directory,
         ).stdout.decode("utf-8")
-        tree = PytestTree()
-        tree.parse(output, directory=directory, root_dir=root_dir)
-        return list(map(str, tree.visit()))
+        tests = output.split("\n")[:-2]
+        if tests[-1] == "":
+            tests = tests[:-1]
+        return self._normalize_paths(tests, directory, root_dir)
 
     @staticmethod
     def __get_pytest_result__(
@@ -410,9 +228,26 @@ class InputRunner(Runner):
         self.output: Dict[str, Tuple[str, str]] = dict()
 
     @staticmethod
-    def _prepare_tests(tests: List[str | List[str]], prefix: str):
+    def split(s: str, sep: str = ",", esc: str = "\"'"):
+        values = list()
+        current = ""
+        escape = None
+        for c in s:
+            if c == escape:
+                escape = None
+            elif escape is None and c in esc:
+                escape = c
+            elif escape is None and c in sep:
+                values.append(current)
+                current = ""
+                continue
+            current += c
+        values.append(current)
+        return values
+
+    def _prepare_tests(self, tests: List[str | List[str]], prefix: str):
         return {
-            f"{prefix}_{i}": (test if isinstance(test, list) else test.split("\n"))
+            f"{prefix}_{i}": (test if isinstance(test, list) else self._split("\n"))
             for i, test in enumerate(tests)
         }
 
