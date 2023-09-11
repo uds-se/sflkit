@@ -46,8 +46,6 @@ __all__ = [
     "unix_dialect",
 ]
 
-import sflkit.runners.pytest
-
 
 class Dialect:
     """Describe a CSV dialect.
@@ -362,7 +360,7 @@ class Sniffer:
         additional chunks as necessary.
         """
 
-        data = list(filter(None, sflkit.runners.pytest.split("\n")))
+        data = list(filter(None, data.split("\n")))
 
         ascii = [chr(c) for c in range(127)]  # 7-bit ASCII
 
