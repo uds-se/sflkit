@@ -34,9 +34,9 @@ class TestCli(BaseTest):
             pass
 
     def test_instrument_analyze(self):
-        main(parse_args(["-c", self.config_path, "instrument"]))
+        main("-c", self.config_path, "instrument")
         self.execute_subject([], 0)
-        main(parse_args(["-c", self.config_path, "analyze", "-o", self.results_path]))
+        main("-c", self.config_path, "analyze", "-o", self.results_path)
         with open(self.results_path, "r") as fp:
             results = json.load(fp)
         self.assertEqual(1, len(results))
