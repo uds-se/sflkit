@@ -1,6 +1,8 @@
 import argparse
 import json
 import logging
+import os
+import sys
 from typing import Any
 
 import sflkit
@@ -25,7 +27,18 @@ class ResultEncoder(json.JSONEncoder):
             return super().default(o)
 
 
-def main(args):
+def main(*args: str, stdout=sys.stdout, stderr=sys.stderr):
+    if "-O" in sys.argv:
+        sys.argv.remove("-O")
+        os.execl(sys.executable, sys.executable, "-O", *sys.argv)
+
+    if stdout is not None:
+        sys.stdout = stdout
+    if stderr is not None:
+        sys.stderr = stderr
+
+    args = parse_args(args or sys.argv[1:])
+
     if args.debug:
         LOGGER.setLevel(logging.DEBUG)
     else:
@@ -117,4 +130,8 @@ def parse_args(args=None, namespace=None):
 
 
 if __name__ == "__main__":
-    main(parse_args())
+    if "-O" in sys.argv:
+        sys.argv.remove("-O")
+        os.execl(sys.executable, sys.executable, "-O", *sys.argv)
+    else:
+        main()
