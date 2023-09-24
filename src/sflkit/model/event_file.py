@@ -26,4 +26,7 @@ class EventFile(object):
 
     def load(self):
         for row in self._csv_reader:
-            yield event.load_event(event.EventType(int(row[0])), *row[1:])
+            try:
+                yield event.load_event(event.EventType(int(row[0])), *row[1:])
+            except IndexError:
+                pass
