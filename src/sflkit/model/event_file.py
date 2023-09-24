@@ -1,4 +1,5 @@
 import csv
+from pickle import PickleError
 
 from sflkitlib.events import event
 
@@ -28,5 +29,5 @@ class EventFile(object):
         for row in self._csv_reader:
             try:
                 yield event.load_event(event.EventType(int(row[0])), *row[1:])
-            except IndexError:
+            except (IndexError, ValueError, PickleError):
                 pass
