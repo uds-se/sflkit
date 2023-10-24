@@ -1,4 +1,3 @@
-import csv
 from pickle import PickleError
 
 from sflkitlib.events import event
@@ -13,8 +12,7 @@ class EventFile(object):
         self._file_pointer = None
 
     def __enter__(self):
-        self._file_pointer = open(self.path, "r")
-        self._csv_reader = csv.reader(self._file_pointer)
+        self._file_pointer = open(self.path, "rb")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._file_pointer.close()
@@ -26,8 +24,8 @@ class EventFile(object):
         return repr(self)
 
     def load(self):
-        for row in self._csv_reader:
+        while self._file_pointer.peek(1):
             try:
-                yield event.load_event(event.EventType(int(row[0])), *row[1:])
+                yield event.load_next_event(self._file_pointer)
             except (IndexError, ValueError, PickleError):
-                pass
+                break

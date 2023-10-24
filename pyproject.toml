@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sflkit"
-version = "0.2.12"
+version = "0.2.13"
 authors = [
     { name = "Marius Smytzek", email = "marius.smytzek@cispa.de" },
 ]
@@ -23,7 +23,7 @@ classifiers = [
     "Topic :: Software Development :: Testing"
 ]
 dependencies = [
-    "sflkitlib>=0.0.1",
+    "sflkitlib>=0.0.2",
     "numpy>=1.23.5",
     "matplotlib>=3.7.2",
     "sortedcollections>=2.1.0"

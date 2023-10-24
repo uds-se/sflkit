@@ -17,6 +17,21 @@ from sflkit.language.python.finder import (
 from sflkit.language.python.visitor import PythonInstrumentation
 from sflkit.language.visitor import ASTVisitor
 
+_PYTHON_FACTORIES = {
+    EventType.LINE: python_factory.LineEventFactory,
+    EventType.BRANCH: python_factory.BranchEventFactory,
+    EventType.DEF: python_factory.DefEventFactory,
+    EventType.USE: python_factory.UseEventFactory,
+    EventType.LOOP_BEGIN: python_factory.LoopBeginEventFactory,
+    EventType.LOOP_HIT: python_factory.LoopHitEventFactory,
+    EventType.LOOP_END: python_factory.LoopEndEventFactory,
+    EventType.FUNCTION_ENTER: python_factory.FunctionEnterEventFactory,
+    EventType.FUNCTION_EXIT: python_factory.FunctionExitEventFactor,
+    EventType.FUNCTION_ERROR: python_factory.FunctionErrorEventFactory,
+    EventType.CONDITION: python_factory.ConditionEventFactory,
+    EventType.LEN: python_factory.LenEventFactory,
+}
+
 
 class Language(enum.Enum):
     def __init__(
@@ -48,19 +63,7 @@ class Language(enum.Enum):
 
     PYTHON = (
         PythonInstrumentation,
-        {
-            EventType.LINE: python_factory.LineEventFactory,
-            EventType.BRANCH: python_factory.BranchEventFactory,
-            EventType.DEF: python_factory.DefEventFactory,
-            EventType.USE: python_factory.UseEventFactory,
-            EventType.LOOP_BEGIN: python_factory.LoopBeginEventFactory,
-            EventType.LOOP_HIT: python_factory.LoopHitEventFactory,
-            EventType.LOOP_END: python_factory.LoopEndEventFactory,
-            EventType.FUNCTION_ENTER: python_factory.FunctionEnterEventFactory,
-            EventType.FUNCTION_EXIT: python_factory.FunctionExitEventFactor,
-            EventType.FUNCTION_ERROR: python_factory.FunctionErrorEventFactory,
-            EventType.CONDITION: python_factory.ConditionEventFactory,
-        },
+        _PYTHON_FACTORIES,
         PythonVarExtract(),
         PythonVarExtract(use=True),
         PythonConditionExtract(),
@@ -72,19 +75,7 @@ class Language(enum.Enum):
     PYTHON3 = PYTHON
     PYTHON2 = (
         None,
-        {
-            EventType.LINE: python_factory.LineEventFactory,
-            EventType.BRANCH: python_factory.BranchEventFactory,
-            EventType.DEF: python_factory.DefEventFactory,
-            EventType.USE: python_factory.UseEventFactory,
-            EventType.LOOP_BEGIN: python_factory.LoopBeginEventFactory,
-            EventType.LOOP_HIT: python_factory.LoopHitEventFactory,
-            EventType.LOOP_END: python_factory.LoopEndEventFactory,
-            EventType.FUNCTION_ENTER: python_factory.FunctionEnterEventFactory,
-            EventType.FUNCTION_EXIT: python_factory.FunctionExitEventFactor,
-            EventType.FUNCTION_ERROR: python_factory.FunctionEnterEventFactory,
-            EventType.CONDITION: python_factory.ConditionEventFactory,
-        },
+        _PYTHON_FACTORIES,
         PythonVarExtract(),
         PythonVarExtract(use=True),
         PythonConditionExtract(),

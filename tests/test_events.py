@@ -330,6 +330,29 @@ class EventTests(BaseTest):
             self.assertEqual(ev, e.value, f"{e} has not correct value")
             self.assertEqual(exp, e.condition, f"{e} has not correct condition")
 
+    def test_len(self):
+        config = Config.create(
+            path=os.path.join(self.TEST_RESOURCES, self.TEST_LEN),
+            language="python",
+            events="len",
+            working=self.TEST_DIR,
+        )
+        instrument_config(config)
+
+        subprocess.run(
+            [self.PYTHON, self.ACCESS, "a", "b", "c"],
+            cwd=self.TEST_DIR,
+        )
+
+        events = event.load(os.path.join(self.TEST_DIR, self.TEST_PATH))
+        self.assertEqual(2, len(events))
+        for i, a, l, e in zip([4, 5], ["args", "a"], [3, 1], events):
+            self.assertIsInstance(e, event.LenEvent, f"{e} is not a line event")
+            self.assertEqual(self.ACCESS, e.file, f"{e} has not correct file")
+            self.assertEqual(i, e.line, f"{e} has not correct line")
+            self.assertEqual(a, e.var, f"{e} has not correct var")
+            self.assertEqual(l, e.length, f"{e} has not correct length")
+
 
 class SerializeEventsTest(BaseTest):
     @parameterized.expand(map(lambda x: (str(x), x), BaseTest.EVENTS))

@@ -18,6 +18,7 @@ class BaseTest(unittest.TestCase):
     PYTHON = "python3.10"
     ACCESS = "main.py"
     TEST_LINES = "test_lines"
+    TEST_LEN = "test_len"
     TEST_BRANCHES = "test_branches"
     TEST_SUGGESTIONS = "test_suggestions"
     TEST_TYPES = "test_types"

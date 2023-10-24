@@ -15,6 +15,7 @@ from sflkitlib.events.event import (
     LoopEndEvent,
     UseEvent,
     ConditionEvent,
+    LenEvent,
 )
 
 from sflkit.language.meta import MetaVisitor, Injection, IDGenerator, TmpGenerator
@@ -58,7 +59,7 @@ class PythonEventFactory(MetaVisitor, NodeVisitor):
         pass
 
     def get_event_call(self, event: Event):
-        return get_call(self.get_function(), event.file, event.line, event.id_)
+        return get_call(self.get_function(), event.file, event.line, event.event_id)
 
 
 class LineEventFactory(PythonEventFactory):
@@ -148,7 +149,7 @@ class BranchEventFactory(PythonEventFactory):
             self.get_function(),
             event.file,
             event.line,
-            event.id_,
+            event.event_id,
             event.then_id,
             event.else_id,
         )
@@ -225,7 +226,7 @@ class DefEventFactory(PythonEventFactory):
 
     def get_event_call(self, event: DefEvent):
         call = get_call(
-            self.get_function(), event.file, event.line, event.id_, event.var
+            self.get_function(), event.file, event.line, event.event_id, event.var
         )
         assert isinstance(call.value, Call)
         call.value.args.append(
@@ -400,7 +401,7 @@ class FunctionEnterEventFactory(FunctionEventFactory):
             self.get_function(),
             event.file,
             event.line,
-            event.id_,
+            event.event_id,
             event.function_id,
             event.function,
         )
@@ -448,7 +449,7 @@ class FunctionExitEventFactor(FunctionEventFactory):
             self.get_function(),
             event.file,
             event.line,
-            event.id_,
+            event.event_id,
             event.function_id,
             event.function,
         )
@@ -532,7 +533,7 @@ class FunctionErrorEventFactory(FunctionEventFactory):
             self.get_function(),
             event.file,
             event.line,
-            event.id_,
+            event.event_id,
             event.function_id,
             event.function,
         )
@@ -567,7 +568,7 @@ class LoopEventFactory(PythonEventFactory):
         self, event: typing.Union[LoopBeginEvent, LoopHitEvent, LoopEndEvent]
     ):
         return get_call(
-            self.get_function(), event.file, event.line, event.id_, event.loop_id
+            self.get_function(), event.file, event.line, event.event_id, event.loop_id
         )
 
     @staticmethod
@@ -670,7 +671,7 @@ class UseEventFactory(PythonEventFactory):
 
     def _get_std_call(self, event: UseEvent):
         call = get_call(
-            self.get_function(), event.file, event.line, event.id_, event.var
+            self.get_function(), event.file, event.line, event.event_id, event.var
         )
         assert isinstance(call.value, Call)
         call.value.args.append(
@@ -830,7 +831,8 @@ class ConditionEventFactory(PythonEventFactory):
             self.get_function(),
             event.file,
             event.line,
-            event.id_,
+            event.event_id,
+            event.event_id,
             event.condition,
         )
         assert isinstance(call.value, Call)
@@ -853,3 +855,45 @@ class ConditionEventFactory(PythonEventFactory):
 
     def visit_If(self, node: If) -> Injection:
         return self.visit_condition(node)
+
+
+class LenEventFactory(DefEventFactory):
+    def get_function(self):
+        return "add_len_event"
+
+    def get_check_for_len(self, event: LenEvent):
+        call = get_call(
+            self.get_function(), event.file, event.line, event.event_id, event.var
+        )
+        assert isinstance(call.value, Call)
+        call.value.args.append(
+            Call(
+                func=Attribute(
+                    value=Name(
+                        id=python_lib,  # enter lib
+                    ),
+                    attr="get_id",  # enter lib function
+                ),
+                args=[Name(id=event.var)],
+                keywords=[],
+            )
+        )
+        call.value.args.append(
+            Call(
+                func=Name(id="len"),
+                args=[Name(id=event.var)],
+                keywords=[],
+            )
+        )
+        return If(
+            test=Call(
+                func=Name(id="hasattr"),
+                args=[Name(id=event.var), Constant(value="__len__")],
+                keywords=[],
+            ),
+            body=[call],
+            orelse=[],
+        )
+
+    def get_event_call(self, event: LenEvent):
+        return self.get_check_for_len(event)

@@ -59,6 +59,9 @@ class Model(object):
     def handle_loop_end_event(self, event):
         self.handle_event(event)
 
+    def handle_len_event(self, event):
+        self.handle_event(event)
+
     def enter_scope(self):
         self.variables = self.variables.enter()
 
