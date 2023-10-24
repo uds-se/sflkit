@@ -361,24 +361,4 @@ class SerializeEventsTest(BaseTest):
 
     @parameterized.expand(map(lambda x: (str(x), x), BaseTest.EVENTS))
     def test_load(self, _, e):
-        args = e.dump()[1:]
-        if e.event_type == event.EventType.FUNCTION_EXIT:
-            if e.return_value == 1:
-                args[5] = b"\x80\x04K\x01."
-            elif e.return_value is None:
-                args[5] = "None"
-            elif e.return_value:
-                args[5] = "True"
-            elif not e.return_value:
-                args[5] = "False"
-        elif e.event_type == event.EventType.DEF:
-            if e.value == 1:
-                args[5] = b"\x80\x04K\x01."
-            elif e.value is None:
-                args[5] = "None"
-            elif e.value:
-                args[5] = "True"
-            elif not e.value:
-                args[5] = "False"
-
-        self.assertEqual(e, event.load_event(e.event_type, *args))
+        self.assertEqual(e, event.load_event(e.dump()))

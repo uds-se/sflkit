@@ -402,8 +402,8 @@ class FunctionEnterEventFactory(FunctionEventFactory):
             event.file,
             event.line,
             event.event_id,
-            event.function_id,
             event.function,
+            event.function_id,
         )
 
     def visit_function(
@@ -413,8 +413,8 @@ class FunctionEnterEventFactory(FunctionEventFactory):
             self.file,
             node.lineno,
             self.id_generator.get_next_id(),
-            self.get_function_id(node),
             node.name,
+            self.get_function_id(node),
         )
         function_var = self.get_function_var(node, self.tmp_generator)
         return Injection(
@@ -450,8 +450,8 @@ class FunctionExitEventFactor(FunctionEventFactory):
             event.file,
             event.line,
             event.event_id,
-            event.function_id,
             event.function,
+            event.function_id,
         )
         assert isinstance(call.value, Call)
         call.value.args.append(Name(id=event.tmp_var))
@@ -480,8 +480,8 @@ class FunctionExitEventFactor(FunctionEventFactory):
             self.file,
             node.lineno,
             self.get_function_event_id(node, self.id_generator),
-            self.get_function_id(node),
             node.name,
+            self.get_function_id(node),
             tmp_var=self.get_function_var(node, self.tmp_generator),
         )
         return Injection(
@@ -502,8 +502,8 @@ class FunctionExitEventFactor(FunctionEventFactory):
             self.file,
             node.lineno,
             self.get_function_event_id(node, self.id_generator),
-            self.get_function_id(function),
             function.name,
+            self.get_function_id(function),
             tmp_var=function_var,
         )
         return Injection(
@@ -534,8 +534,8 @@ class FunctionErrorEventFactory(FunctionEventFactory):
             event.file,
             event.line,
             event.event_id,
-            event.function_id,
             event.function,
+            event.function_id,
         )
 
     def visit_function(
@@ -545,8 +545,8 @@ class FunctionErrorEventFactory(FunctionEventFactory):
             self.file,
             node.lineno,
             self.get_function_event_id(node, self.id_generator),
-            self.get_function_id(node),
             node.name,
+            self.get_function_id(node),
         )
         return Injection(
             error=[self.get_event_call(function_error_event)],
@@ -831,7 +831,6 @@ class ConditionEventFactory(PythonEventFactory):
             self.get_function(),
             event.file,
             event.line,
-            event.event_id,
             event.event_id,
             event.condition,
         )

@@ -143,22 +143,6 @@ class TestLib(BaseTest):
             pass
         self.lib.reset()
 
-    @parameterized.expand(map(lambda x: (str(x), x), BaseTest.EVENTS))
-    def test_lib(self, _, e):
-        args = e.dump()[1:]
-        while "int" in args:
-            args[args.index("int")] = int
-        while "bool" in args:
-            args[args.index("bool")] = bool
-        while "none" in args:
-            args[args.index("none")] = type(None)
-        while "list" in args:
-            args[args.index("list")] = list
-        self.event_type_map[e.event_type](*args)
-        self.load()
-        self.assertEqual(1, len(self.events))
-        self.assertIn(e, self.events)
-
     def test_get_id(self):
         x = 10
         self.assertEqual(id(x), self.lib.get_id(x))

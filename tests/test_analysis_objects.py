@@ -48,7 +48,7 @@ class TestAnalysisObjects(BaseTest):
         self.assertIn(EventType.BRANCH, obj.events())
 
     def test_function(self):
-        obj = Function(FunctionEnterEvent(self.ACCESS, 1, 0, 0, "main"))
+        obj = Function(FunctionEnterEvent(self.ACCESS, 1, 0, "main", 0))
         self.assertEqual(self.ACCESS, obj.file)
         self.assertEqual(1, obj.line)
         self.assertEqual("main", obj.function)
