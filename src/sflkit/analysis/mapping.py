@@ -1,5 +1,5 @@
 from sflkit.analysis.analysis_type import AnalysisType
-from sflkit.analysis.spectra import Line, Function, DefUse, Loop
+from sflkit.analysis.spectra import Line, Function, DefUse, Loop, Length
 from sflkit.analysis.predicate import (
     Branch,
     ScalarPair,
@@ -25,6 +25,7 @@ analysis_mapping[AnalysisType.LINE] = Line
 analysis_mapping[AnalysisType.FUNCTION] = Function
 analysis_mapping[AnalysisType.DEF_USE] = DefUse
 analysis_mapping[AnalysisType.LOOP] = Loop
+analysis_mapping[AnalysisType.LENGTH] = Length
 
 """Predicates"""
 analysis_mapping[AnalysisType.BRANCH] = Branch

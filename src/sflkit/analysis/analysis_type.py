@@ -27,6 +27,7 @@ class AnalysisType(enum.Enum):
     DIGIT_STRING = 12
     SPECIAL_STRING = 13
     EMPTY_BYTES = 14
+    LENGTH = 15
 
     def __str__(self):
         return self.name

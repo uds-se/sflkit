@@ -7,6 +7,7 @@ from sflkitlib.events.event import (
     DefEvent,
     UseEvent,
     FunctionExitEvent,
+    LenEvent,
 )
 
 from sflkit.analysis.analysis_type import AnalysisType
@@ -24,7 +25,7 @@ from sflkit.analysis.predicate import (
     ContainsDigitPredicate,
     ContainsSpecialPredicate,
 )
-from sflkit.analysis.spectra import Line, Function, Loop, DefUse
+from sflkit.analysis.spectra import Line, Function, Loop, DefUse, Length
 from utils import BaseTest
 
 
@@ -65,6 +66,15 @@ class TestAnalysisObjects(BaseTest):
         self.assertIn(EventType.LOOP_BEGIN, obj.events())
         self.assertIn(EventType.LOOP_HIT, obj.events())
         self.assertIn(EventType.LOOP_END, obj.events())
+
+    def test_length(self):
+        obj = Length(LenEvent(self.ACCESS, 1, 0, "x", 0, 1))
+        self.assertEqual(self.ACCESS, obj.file)
+        self.assertEqual(1, obj.line)
+        self.assertEqual("x", obj.var)
+        self.assertEqual(AnalysisType.LENGTH, obj.analysis_type())
+        self.assertEqual(1, len(obj.events()))
+        self.assertIn(EventType.LEN, obj.events())
 
     def test_def_use(self):
         obj = DefUse(

@@ -263,6 +263,29 @@ class SuggestionsFromPredicatesLoopTest(BaseTest):
         self.assertIn(Location("main.py", 8), suggestions[0].lines)
 
 
+class SuggestionsFromPredicatesLenTest(BaseTest):
+    @classmethod
+    def setUpClass(cls):
+        cls.analyzer = cls.run_analysis(
+            cls.TEST_LEN,
+            "",
+            "length",
+            relevant=[["x", "y"], ["a", "b", "c"]],
+            irrelevant=[["a"], ["c"], [""], []],
+        )
+        cls.original_dir = os.path.join(cls.TEST_RESOURCES, cls.TEST_LEN)
+
+    def test_len_suggestions(self):
+        suggestions = self.analyzer.get_sorted_suggestions(
+            base_dir=self.original_dir,
+            type_=AnalysisType.LENGTH,
+            metric=Spectrum.Tarantula,
+        )
+        self.assertAlmostEqual(1, suggestions[0].suspiciousness, delta=self.DELTA)
+        self.assertEqual(1, len(suggestions[0].lines))
+        self.assertIn(Location("main.py", 4), suggestions[0].lines)
+
+
 class SuggestionsFromConditionsLoopTest(BaseTest):
     @classmethod
     def setUpClass(cls):

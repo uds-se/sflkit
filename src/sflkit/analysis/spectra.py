@@ -12,6 +12,7 @@ from sflkitlib.events.event import (
     LoopHitEvent,
     DefEvent,
     UseEvent,
+    LenEvent,
 )
 
 from sflkit.analysis.analysis_type import AnalysisObject, AnalysisType, EvaluationResult
@@ -527,7 +528,19 @@ class DefUse(Spectrum):
         return f"{self.analysis_type()}:{self.file}:{self.line}:{self.use_file}:{self.use_line}:{self.var}"
 
 
-class Loop(Spectrum):
+class ModifiableSpectrum(Spectrum, ABC):
+    def finalize_evaluation(self, evaluate: Callable, passed: list, failed: list):
+        for event_file in failed:
+            if event_file in self.hits and any(map(evaluate, self.hits[event_file])):
+                self.fail_observed()
+        for event_file in passed:
+            if event_file in self.hits and any(map(evaluate, self.hits[event_file])):
+                self.pass_observed()
+        self.set_passed(len(passed))
+        self.set_failed(len(failed))
+
+
+class Loop(ModifiableSpectrum):
     def __init__(
         self,
         event: LoopBeginEvent | LoopHitEvent | LoopEndEvent,
@@ -571,18 +584,7 @@ class Loop(Spectrum):
             self.hits[id_].append(hits)
 
     def finalize(self, passed: list, failed: list):
-        for event_file in failed:
-            if event_file in self.hits and any(
-                map(self.evaluate_hit, self.hits[event_file])
-            ):
-                self.fail_observed()
-        for event_file in passed:
-            if event_file in self.hits and any(
-                map(self.evaluate_hit, self.hits[event_file])
-            ):
-                self.pass_observed()
-        self.set_passed(len(passed))
-        self.set_failed(len(failed))
+        self.finalize_evaluation(self.evaluate_hit, passed, failed)
 
     def get_suggestion(self, metric: Callable = None, base_dir: str = ""):
         finder = self.loop_finder(self.file, self.line)
@@ -593,3 +595,46 @@ class Loop(Spectrum):
 
     def __str__(self):
         return f"{self.analysis_type()}:{self.file}:{self.line}"
+
+
+class Length(ModifiableSpectrum):
+    def __init__(
+        self,
+        event: LenEvent,
+        evaluate_hit: Optional[Callable] = None,
+    ):
+        super().__init__(event.file, event.line)
+        self.var = event.var
+        self.evaluate_length = evaluate_hit if evaluate_hit else self.evaluate_length_0
+
+    @staticmethod
+    def evaluate_length_0(x):
+        return x == 0
+
+    @staticmethod
+    def evaluate_length_1(x):
+        return x == 1
+
+    @staticmethod
+    def evaluate_length_more(x):
+        return x > 1
+
+    @staticmethod
+    def analysis_type():
+        return AnalysisType.LENGTH
+
+    @staticmethod
+    def events():
+        return [EventType.LEN]
+
+    def hit(self, id_, event, scope_: Scope = None):
+        if id_ not in self.hits:
+            self.hits[id_] = [event.length]
+        else:
+            self.hits[id_].append(event.length)
+
+    def finalize(self, passed: list, failed: list):
+        self.finalize_evaluation(self.evaluate_length, passed, failed)
+
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.line}:{self.var}:{self.evaluate_length.__name__}"

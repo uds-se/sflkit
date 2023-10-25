@@ -19,7 +19,7 @@ from sflkit.analysis.predicate import (
     ContainsSpecialPredicate,
     EmptyBytesPredicate,
 )
-from sflkit.analysis.spectra import Line, Function, Loop, DefUse
+from sflkit.analysis.spectra import Line, Function, Loop, DefUse, Length
 from sflkit.model.scope import Scope
 
 
@@ -401,10 +401,39 @@ class ContainsSpecialFactory(PredicateFunctionFactory):
         super().__init__(ContainsSpecialPredicate)
 
 
+class LengthFactory(AnalysisFactory):
+    def __init__(
+        self, length_0: bool = True, length_1: bool = True, length_more: bool = True
+    ):
+        super().__init__()
+        self.length_0 = length_0
+        self.length_1 = length_1
+        self.length_more = length_more
+
+    def get_all(self) -> Set[AnalysisObject]:
+        return set(obj for value in self.objects.values() for obj in value)
+
+    def get_analysis(self, event, scope: Scope = None) -> List[AnalysisObject]:
+        if event.event_type == EventType.LEN:
+            key = (Length.analysis_type(), event.file, event.line, event.var)
+            if key not in self.objects:
+                self.objects[key] = []
+                if self.length_0:
+                    self.objects[key].append(Length(event, Length.evaluate_length_0)),
+                if self.length_1:
+                    self.objects[key].append(Length(event, Length.evaluate_length_1)),
+                if self.length_more:
+                    self.objects[key].append(
+                        Length(event, Length.evaluate_length_more)
+                    ),
+            return self.objects[key][:]
+
+
 analysis_factory_mapping = {
     AnalysisType.LINE: LineFactory,
     AnalysisType.BRANCH: BranchFactory,
     AnalysisType.LOOP: LoopFactory,
+    AnalysisType.LENGTH: LengthFactory,
     AnalysisType.CONDITION: ConditionFactory,
     AnalysisType.NONE: NoneFactory,
     AnalysisType.DEF_USE: DefUseFactory,
