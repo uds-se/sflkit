@@ -6,6 +6,7 @@ from sflkitlib.events import event
 
 from sflkit import instrument_config
 from sflkit.config import Config
+from sflkit.mapping import EventMapping
 from utils import BaseTest
 
 
@@ -21,7 +22,10 @@ class EventTests(BaseTest):
 
         subprocess.run([self.PYTHON, self.ACCESS], cwd=self.TEST_DIR)
 
-        events = event.load(os.path.join(self.TEST_DIR, self.TEST_PATH))
+        events = event.load(
+            os.path.join(self.TEST_DIR, self.TEST_PATH),
+            EventMapping.load(config).mapping,
+        )
         self.assertEqual(3, len(events))
         for i, e in enumerate(events):
             self.assertIsInstance(e, event.LineEvent, f"{e} is not a line event")
@@ -39,7 +43,10 @@ class EventTests(BaseTest):
 
         subprocess.run([self.PYTHON, self.ACCESS], cwd=self.TEST_DIR)
 
-        events = event.load(os.path.join(self.TEST_DIR, self.TEST_PATH))
+        events = event.load(
+            os.path.join(self.TEST_DIR, self.TEST_PATH),
+            EventMapping.load(config).mapping,
+        )
         self.assertEqual(5, len(events))
         lines = [1, 4, 5]
         line_i = 0
@@ -83,7 +90,10 @@ class EventTests(BaseTest):
         instrument_config(config)
 
         subprocess.run([BaseTest.PYTHON, BaseTest.ACCESS], cwd=BaseTest.TEST_DIR)
-        return event.load(os.path.join(BaseTest.TEST_DIR, BaseTest.TEST_PATH))
+        return event.load(
+            os.path.join(BaseTest.TEST_DIR, BaseTest.TEST_PATH),
+            EventMapping.load(config).mapping,
+        )
 
     def test_function(self):
         events = self._test_events("function_enter,function_exit")
@@ -344,7 +354,10 @@ class EventTests(BaseTest):
             cwd=self.TEST_DIR,
         )
 
-        events = event.load(os.path.join(self.TEST_DIR, self.TEST_PATH))
+        events = event.load(
+            os.path.join(self.TEST_DIR, self.TEST_PATH),
+            EventMapping.load(config).mapping,
+        )
         self.assertEqual(2, len(events))
         for i, a, l, e in zip([4, 5], ["args", "a"], [3, 1], events):
             self.assertIsInstance(e, event.LenEvent, f"{e} is not a line event")
@@ -361,4 +374,4 @@ class SerializeEventsTest(BaseTest):
 
     @parameterized.expand(map(lambda x: (str(x), x), BaseTest.EVENTS))
     def test_load(self, _, e):
-        self.assertEqual(e, event.load_event(e.dump()))
+        self.assertEqual(e, event.load_event(e.dump(), {e.event_id: e}))

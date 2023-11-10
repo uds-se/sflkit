@@ -5,7 +5,6 @@ from sflkitlib.events import EventType
 from sflkitlib.events.event import (
     LineEvent,
     Event,
-    load_json,
     BranchEvent,
     DefEvent,
     UseEvent,
@@ -20,6 +19,7 @@ from sflkitlib.events.event import (
 
 from sflkit import Config, instrument_config
 from sflkit.language.language import Language
+from sflkit.mapping import EventMapping
 from utils import BaseTest
 
 
@@ -34,9 +34,9 @@ class LanguageTests(BaseTest):
             events=",".join(e.name.lower() for e in events),
             working=BaseTest.TEST_DIR,
         )
-        instrument_config(config, self.TEST_EVENTS)
+        instrument_config(config)
 
-        return load_json(self.TEST_EVENTS)
+        return EventMapping.load(config).sorted()
 
     def _verify_events(self, actual, expected):
         for e in expected:
@@ -195,7 +195,7 @@ class LanguageTests(BaseTest):
         self._verify_events(
             self._instrument([EventType.CONDITION]),
             list(
-                ConditionEvent(self.ACCESS, line, self._count(), condition)
+                ConditionEvent(self.ACCESS, line, self._count(), condition, "")
                 for line, condition in [
                     (34, "True"),
                     (72, "False"),
@@ -235,7 +235,7 @@ class LanguageTests(BaseTest):
                 ]
             ),
             list(
-                FunctionExitEvent(self.ACCESS, line, self._count(), id_, function)
+                FunctionExitEvent(self.ACCESS, line, self._count(), id_, function, "")
                 for line, id_, function in [
                     (9, 0, "__enter__"),
                     (10, 0, "__enter__"),

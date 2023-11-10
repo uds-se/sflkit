@@ -2,11 +2,16 @@ from pickle import PickleError
 
 from sflkitlib.events import event
 
+from sflkit.mapping import EventMapping
+
 
 class EventFile(object):
-    def __init__(self, path: str, run_id: int, failing: bool = False):
+    def __init__(
+        self, path: str, run_id: int, mapping: EventMapping, failing: bool = False
+    ):
         self.path = path
         self.run_id = run_id
+        self.mapping = mapping
         self.failing = failing
         self._csv_reader = None
         self._file_pointer = None
@@ -26,6 +31,6 @@ class EventFile(object):
     def load(self):
         while self._file_pointer.peek(1):
             try:
-                yield event.load_next_event(self._file_pointer)
+                yield event.load_next_event(self._file_pointer, self.mapping.mapping)
             except (IndexError, ValueError, PickleError):
                 break

@@ -45,9 +45,15 @@ def get_call(function, *args) -> Expr:
 
 class PythonEventFactory(MetaVisitor, NodeVisitor):
     def __init__(
-        self, language, id_generator: IDGenerator, tmp_generator: TmpGenerator
+        self,
+        language,
+        event_id_generator: IDGenerator,
+        funtion_id_generator: IDGenerator,
+        tmp_generator: TmpGenerator,
     ):
-        super().__init__(language, id_generator, tmp_generator)
+        super().__init__(
+            language, event_id_generator, funtion_id_generator, tmp_generator
+        )
 
     def visit_start(self, *args) -> Injection:
         return self.visit(*args)
@@ -59,7 +65,7 @@ class PythonEventFactory(MetaVisitor, NodeVisitor):
         pass
 
     def get_event_call(self, event: Event):
-        return get_call(self.get_function(), event.file, event.line, event.event_id)
+        return get_call(self.get_function(), event.event_id)
 
 
 class LineEventFactory(PythonEventFactory):
@@ -67,7 +73,9 @@ class LineEventFactory(PythonEventFactory):
         return "add_line_event"
 
     def visit_line(self, node: AST) -> Injection:
-        line_event = LineEvent(self.file, node.lineno, self.id_generator.get_next_id())
+        line_event = LineEvent(
+            self.file, node.lineno, self.event_id_generator.get_next_id()
+        )
         return Injection(pre=[self.get_event_call(line_event)], events=[line_event])
 
     def visit_Assign(self, node: Assign) -> Injection:
@@ -139,20 +147,16 @@ class LineEventFactory(PythonEventFactory):
 
 class BranchEventFactory(PythonEventFactory):
     def __init__(
-        self, language, id_generator: IDGenerator, tmp_generator: TmpGenerator
+        self,
+        language,
+        event_id_generator: IDGenerator,
+        funtion_id_generator: IDGenerator,
+        tmp_generator: TmpGenerator,
     ):
-        super().__init__(language, id_generator, tmp_generator)
-        self.branch_id = 0
-
-    def get_event_call(self, event: BranchEvent):
-        return get_call(
-            self.get_function(),
-            event.file,
-            event.line,
-            event.event_id,
-            event.then_id,
-            event.else_id,
+        super().__init__(
+            language, event_id_generator, funtion_id_generator, tmp_generator
         )
+        self.branch_id = 0
 
     def get_function(self):
         return "add_branch_event"
@@ -161,14 +165,14 @@ class BranchEventFactory(PythonEventFactory):
         then_branch_event = BranchEvent(
             self.file,
             node.lineno,
-            self.id_generator.get_next_id(),
+            self.event_id_generator.get_next_id(),
             self.branch_id,
             self.branch_id + 1,
         )
         else_branch_event = BranchEvent(
             self.file,
             node.lineno,
-            self.id_generator.get_next_id(),
+            self.event_id_generator.get_next_id(),
             self.branch_id + 1,
             self.branch_id,
         )
@@ -197,7 +201,11 @@ class BranchEventFactory(PythonEventFactory):
 
     def visit_ExceptHandler(self, node: ExceptHandler) -> Injection:
         branch_event = BranchEvent(
-            self.file, node.lineno, self.id_generator.get_next_id(), self.branch_id, -1
+            self.file,
+            node.lineno,
+            self.event_id_generator.get_next_id(),
+            self.branch_id,
+            -1,
         )
         return Injection(
             body=[self.get_event_call(branch_event)], events=[branch_event]
@@ -208,7 +216,7 @@ class BranchEventFactory(PythonEventFactory):
             else_branch_event = BranchEvent(
                 self.file,
                 node.lineno,
-                self.id_generator.get_next_id(),
+                self.event_id_generator.get_next_id(),
                 self.branch_id,
                 -1,
             )
@@ -225,9 +233,7 @@ class DefEventFactory(PythonEventFactory):
         return "add_def_event"
 
     def get_event_call(self, event: DefEvent):
-        call = get_call(
-            self.get_function(), event.file, event.line, event.event_id, event.var
-        )
+        call = get_call(self.get_function(), event.event_id)
         assert isinstance(call.value, Call)
         call.value.args.append(
             Call(
@@ -266,14 +272,7 @@ class DefEventFactory(PythonEventFactory):
         def_events = list()
         for argument in self.variable_extract.visit(node.args):
             if argument != "self":
-                def_events.append(
-                    DefEvent(
-                        self.file,
-                        node.lineno,
-                        self.id_generator.get_next_id(),
-                        argument,
-                    )
-                )
+                def_events.append(self.get_event(node, argument))
         return Injection(
             body=[self.get_event_call(e) for e in def_events], events=def_events
         )
@@ -284,14 +283,17 @@ class DefEventFactory(PythonEventFactory):
     def visit_AsyncFunctionDef(self, node: AsyncFunctionDef) -> Injection:
         return self.visit_function(node)
 
+    def get_event(self, node: typing.Union[Assign, AnnAssign, AugAssign], var: str):
+        return DefEvent(
+            self.file, node.lineno, self.event_id_generator.get_next_id(), var
+        )
+
     def visit_var_assign(
         self, node: typing.Union[Assign, AnnAssign, AugAssign], vars_: list
     ) -> Injection:
         def_events = list()
         for var in vars_:
-            def_events.append(
-                DefEvent(self.file, node.lineno, self.id_generator.get_next_id(), var)
-            )
+            def_events.append(self.get_event(node, var))
         return Injection(
             post=[self.get_event_call(e) for e in def_events], events=def_events
         )
@@ -318,9 +320,7 @@ class DefEventFactory(PythonEventFactory):
         vars_ = self.variable_extract.visit(node.target)
         def_events = list()
         for var in vars_:
-            def_events.append(
-                DefEvent(self.file, node.lineno, self.id_generator.get_next_id(), var)
-            )
+            def_events.append(self.get_event(node, var))
         return Injection(
             body=[self.get_event_call(e) for e in def_events], events=def_events
         )
@@ -336,11 +336,7 @@ class DefEventFactory(PythonEventFactory):
         for item in node.items:
             if item.optional_vars:
                 for var in self.variable_extract.visit(item.optional_vars):
-                    def_events.append(
-                        DefEvent(
-                            self.file, node.lineno, self.id_generator.get_next_id(), var
-                        )
-                    )
+                    def_events.append(self.get_event(node, var))
         if def_events:
             return Injection(
                 body=[self.get_event_call(e) for e in def_events], events=def_events
@@ -358,19 +354,24 @@ class FunctionEventFactory(PythonEventFactory):
     functions: typing.Dict[AST, int] = dict()
     functions_exit_id: typing.Dict[AST, int] = dict()
     function_var: typing.Dict[AST, str] = dict()
-    function_id: int = 0
 
     def __init__(
-        self, language, id_generator: IDGenerator, tmp_generator: TmpGenerator
+        self,
+        language,
+        event_id_generator: IDGenerator,
+        funtion_id_generator: IDGenerator,
+        tmp_generator: TmpGenerator,
     ):
-        super().__init__(language, id_generator, tmp_generator)
+        super().__init__(
+            language, event_id_generator, funtion_id_generator, tmp_generator
+        )
         self.function_stack = list()
 
-    @staticmethod
-    def get_function_id(node: AST) -> int:
+    def get_function_id(self, node: AST) -> int:
         if node not in FunctionEventFactory.functions:
-            FunctionEventFactory.functions[node] = FunctionEventFactory.function_id
-            FunctionEventFactory.function_id += 1
+            FunctionEventFactory.functions[
+                node
+            ] = self.function_id_generator.get_next_id()
         return FunctionEventFactory.functions[node]
 
     @staticmethod
@@ -396,23 +397,13 @@ class FunctionEnterEventFactory(FunctionEventFactory):
     def get_function(self):
         return "add_function_enter_event"
 
-    def get_event_call(self, event: FunctionEnterEvent):
-        return get_call(
-            self.get_function(),
-            event.file,
-            event.line,
-            event.event_id,
-            event.function,
-            event.function_id,
-        )
-
     def visit_function(
         self, node: typing.Union[FunctionDef, AsyncFunctionDef]
     ) -> Injection:
         function_enter_event = FunctionEnterEvent(
             self.file,
             node.lineno,
-            self.id_generator.get_next_id(),
+            self.event_id_generator.get_next_id(),
             node.name,
             self.get_function_id(node),
         )
@@ -447,11 +438,7 @@ class FunctionExitEventFactor(FunctionEventFactory):
     def get_event_call(self, event: FunctionExitEvent):
         call = get_call(
             self.get_function(),
-            event.file,
-            event.line,
             event.event_id,
-            event.function,
-            event.function_id,
         )
         assert isinstance(call.value, Call)
         call.value.args.append(Name(id=event.tmp_var))
@@ -479,7 +466,7 @@ class FunctionExitEventFactor(FunctionEventFactory):
         function_exit_event = FunctionExitEvent(
             self.file,
             node.lineno,
-            self.get_function_event_id(node, self.id_generator),
+            self.get_function_event_id(node, self.event_id_generator),
             node.name,
             self.get_function_id(node),
             tmp_var=self.get_function_var(node, self.tmp_generator),
@@ -501,7 +488,7 @@ class FunctionExitEventFactor(FunctionEventFactory):
         function_exit_event = FunctionExitEvent(
             self.file,
             node.lineno,
-            self.get_function_event_id(node, self.id_generator),
+            self.get_function_event_id(node, self.event_id_generator),
             function.name,
             self.get_function_id(function),
             tmp_var=function_var,
@@ -528,23 +515,13 @@ class FunctionErrorEventFactory(FunctionEventFactory):
     def get_function(self):
         return "add_function_error_event"
 
-    def get_event_call(self, event: FunctionEnterEvent | FunctionErrorEvent):
-        return get_call(
-            self.get_function(),
-            event.file,
-            event.line,
-            event.event_id,
-            event.function,
-            event.function_id,
-        )
-
     def visit_function(
         self, node: typing.Union[FunctionDef, AsyncFunctionDef]
     ) -> Injection:
         function_error_event = FunctionErrorEvent(
             self.file,
             node.lineno,
-            self.get_function_event_id(node, self.id_generator),
+            self.get_function_event_id(node, self.event_id_generator),
             node.name,
             self.get_function_id(node),
         )
@@ -563,13 +540,6 @@ class FunctionErrorEventFactory(FunctionEventFactory):
 class LoopEventFactory(PythonEventFactory):
     loops: typing.Dict[AST, int] = dict()
     loop_id: int = 0
-
-    def get_event_call(
-        self, event: typing.Union[LoopBeginEvent, LoopHitEvent, LoopEndEvent]
-    ):
-        return get_call(
-            self.get_function(), event.file, event.line, event.event_id, event.loop_id
-        )
 
     @staticmethod
     def get_loop_id(node: AST) -> int:
@@ -599,7 +569,7 @@ class LoopBeginEventFactory(LoopEventFactory):
         loop_begin_event = LoopBeginEvent(
             self.file,
             node.lineno,
-            self.id_generator.get_next_id(),
+            self.event_id_generator.get_next_id(),
             self.get_loop_id(node),
         )
         return Injection(
@@ -615,7 +585,7 @@ class LoopHitEventFactory(LoopEventFactory):
         loop_hit_event = LoopHitEvent(
             self.file,
             node.lineno,
-            self.id_generator.get_next_id(),
+            self.event_id_generator.get_next_id(),
             self.get_loop_id(node),
         )
         return Injection(
@@ -631,7 +601,7 @@ class LoopEndEventFactory(LoopEventFactory):
         loop_end_event = LoopEndEvent(
             self.file,
             node.lineno,
-            self.id_generator.get_next_id(),
+            self.event_id_generator.get_next_id(),
             self.get_loop_id(node),
         )
         return Injection(
@@ -670,9 +640,7 @@ class UseEventFactory(PythonEventFactory):
         )
 
     def _get_std_call(self, event: UseEvent):
-        call = get_call(
-            self.get_function(), event.file, event.line, event.event_id, event.var
-        )
+        call = get_call(self.get_function(), event.event_id)
         assert isinstance(call.value, Call)
         call.value.args.append(
             Call(
@@ -744,7 +712,9 @@ class UseEventFactory(PythonEventFactory):
         use_events = list()
         for use in uses:
             use_events.append(
-                UseEvent(self.file, node.lineno, self.id_generator.get_next_id(), use)
+                UseEvent(
+                    self.file, node.lineno, self.event_id_generator.get_next_id(), use
+                )
             )
         return Injection(
             pre=[self.get_event_call(e) for e in use_events], events=use_events
@@ -829,10 +799,7 @@ class ConditionEventFactory(PythonEventFactory):
     def get_event_call(self, event: ConditionEvent):
         call = get_call(
             self.get_function(),
-            event.file,
-            event.line,
             event.event_id,
-            event.condition,
         )
         assert isinstance(call.value, Call)
         call.value.args.append(
@@ -861,9 +828,7 @@ class LenEventFactory(DefEventFactory):
         return "add_len_event"
 
     def get_check_for_len(self, event: LenEvent):
-        call = get_call(
-            self.get_function(), event.file, event.line, event.event_id, event.var
-        )
+        call = get_call(self.get_function(), event.event_id)
         assert isinstance(call.value, Call)
         call.value.args.append(
             Call(
@@ -896,3 +861,8 @@ class LenEventFactory(DefEventFactory):
 
     def get_event_call(self, event: LenEvent):
         return self.get_check_for_len(event)
+
+    def get_event(self, node: typing.Union[Assign, AnnAssign, AugAssign], var: str):
+        return LenEvent(
+            self.file, node.lineno, self.event_id_generator.get_next_id(), var
+        )

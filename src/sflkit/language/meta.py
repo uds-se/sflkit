@@ -68,9 +68,14 @@ class TmpGenerator:
 
 class MetaVisitor(ABC):
     def __init__(
-        self, language, id_generator: IDGenerator, tmp_generator: TmpGenerator
+        self,
+        language,
+        event_id_generator: IDGenerator,
+        funtion_id_generator: IDGenerator,
+        tmp_generator: TmpGenerator,
     ):
-        self.id_generator = id_generator
+        self.event_id_generator = event_id_generator
+        self.function_id_generator = funtion_id_generator
         self.tmp_generator = tmp_generator
         self.variable_extract = language.var_extract
         self.use_extract = language.use_extract
@@ -107,13 +112,25 @@ class CombinationVisitor(MetaVisitor):
     def __init__(
         self,
         language,
-        id_generator: IDGenerator,
+        event_id_generator: IDGenerator,
+        funtion_id_generator: IDGenerator,
         tmp_generator: TmpGenerator,
         visitors: List[Type[MetaVisitor]],
     ):
-        super().__init__(language, id_generator, tmp_generator)
+        super().__init__(
+            language,
+            event_id_generator,
+            funtion_id_generator,
+            tmp_generator,
+        )
         self.visitors = [
-            visitor(language, id_generator, tmp_generator) for visitor in visitors
+            visitor(
+                language,
+                event_id_generator,
+                funtion_id_generator,
+                tmp_generator,
+            )
+            for visitor in visitors
         ]
 
     def visit_start(self, *args) -> Injection:

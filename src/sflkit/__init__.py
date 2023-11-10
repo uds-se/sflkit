@@ -7,7 +7,7 @@ from sflkit.config import Config, parse_config
 from sflkit.instrumentation.dir_instrumentation import DirInstrumentation
 
 
-def instrument_config(conf: Config, event_dump: str = None):
+def instrument_config(conf: Config):
     instrumentation = DirInstrumentation(conf.visitor)
     instrumentation.instrument(
         conf.target_path,
@@ -16,13 +16,12 @@ def instrument_config(conf: Config, event_dump: str = None):
         includes=conf.instrument_include,
         excludes=conf.instrument_exclude,
     )
-    if event_dump:
-        instrumentation.dump_events(event_dump)
+    instrumentation.dump_events(conf)
 
 
-def instrument(config_path: PathLike, event_dump: str = None):
+def instrument(config_path: PathLike):
     conf = parse_config(config_path)
-    instrument_config(conf, event_dump)
+    instrument_config(conf)
 
 
 def run_config(conf: Config, output: PathLike = None):

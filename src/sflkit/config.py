@@ -1,5 +1,6 @@
 import configparser
 import csv
+import hashlib
 import os.path
 import queue
 from pathlib import Path
@@ -24,6 +25,7 @@ from sflkit.language.meta import (
     MetaVisitor,
 )
 from sflkit.language.visitor import ASTVisitor
+from sflkit.mapping import EventMapping, InstrumentationError
 from sflkit.model.event_file import EventFile
 from sflkit.runners import RunnerType
 
@@ -74,6 +76,7 @@ class Config:
         self.instrument_exclude = list()
         self.instrument_working = None
         self.runner = None
+        self.mapping = None
         if path:
             if isinstance(path, configparser.ConfigParser):
                 config = path
@@ -121,6 +124,7 @@ class Config:
                 self.meta_visitor = CombinationVisitor(
                     self.language,
                     IDGenerator(),
+                    IDGenerator(),
                     TmpGenerator(),
                     [self.language.meta_visitors[e] for e in self.events],
                 )
@@ -137,15 +141,23 @@ class Config:
                     self.metrics = [Spectrum.Ochiai]
 
                 run_id_generator = IDGenerator()
+                try:
+                    self.mapping = EventMapping.load(self)
+                except InstrumentationError:
+                    self.mapping = EventMapping()
                 if "passing" in events:
                     self.passing = self.get_event_files(
                         list(csv.reader([events["passing"]]))[0],
                         run_id_generator,
+                        self.mapping,
                         False,
                     )
                 if "failing" in events:
                     self.failing = self.get_event_files(
-                        list(csv.reader([events["failing"]]))[0], run_id_generator, True
+                        list(csv.reader([events["failing"]]))[0],
+                        run_id_generator,
+                        self.mapping,
+                        True,
                     )
                 # instrumentation section
                 instrument = config["instrumentation"]
@@ -209,7 +221,7 @@ class Config:
         return conf
 
     @staticmethod
-    def get_event_files(files, run_id_generator, failing):
+    def get_event_files(files, run_id_generator, mapping: EventMapping, failing):
         file_queue = queue.Queue()
         for f in files:
             file_queue.put(f)
@@ -223,12 +235,20 @@ class Config:
                 elif os.path.isfile(element) and not os.path.islink(element):
                     result.append(
                         EventFile(
-                            element, run_id_generator.get_next_id(), failing=failing
+                            element,
+                            run_id_generator.get_next_id(),
+                            mapping,
+                            failing=failing,
                         )
                     )
             else:
                 result.append(
-                    EventFile(element, run_id_generator.get_next_id(), failing=failing)
+                    EventFile(
+                        element,
+                        run_id_generator.get_next_id(),
+                        mapping,
+                        failing=failing,
+                    )
                 )
         return result
 
@@ -309,6 +329,9 @@ class Config:
 
         with open(path, "w") as fp:
             conf.write(fp)
+
+    def identifier(self):
+        return hashlib.md5(str(self.target_path).encode("utf-8")).hexdigest()
 
 
 def parse_config(path: str) -> Config:

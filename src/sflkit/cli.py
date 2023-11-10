@@ -44,7 +44,7 @@ def main(*args: str, stdout=sys.stdout, stderr=sys.stderr):
     else:
         LOGGER.setLevel(logging.INFO)
     if args.command == INSTRUMENT:
-        sflkit.instrument(args.config, args.events)
+        sflkit.instrument(args.config)
     elif args.command == RUN:
         sflkit.run(args.config, args.out)
     elif args.command == ANALYZE:
@@ -77,19 +77,11 @@ def parse_args(args=None, namespace=None):
         required=True,
     )
 
-    instrument_parser = commands.add_parser(
+    commands.add_parser(
         INSTRUMENT,
         description="The instrumentation command instruments a subject to collect "
         "various predicates during its execution.",
         help="execute the instrumentation of subject",
-    )
-    instrument_parser.add_argument(
-        "-e",
-        "--events",
-        dest="events",
-        default=None,
-        help="the destination of the found predicates file "
-        "for the project (default: events.json)",
     )
 
     analyze_parser = commands.add_parser(

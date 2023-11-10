@@ -7,6 +7,7 @@ from typing import List
 from sflkitlib.events import event
 
 from sflkit import instrument_config, Analyzer, Config
+from sflkit.mapping import EventMapping
 from sflkit.model import EventFile
 
 
@@ -86,14 +87,16 @@ class BaseTest(unittest.TestCase):
         irrelevant_event_files = list()
         count = 0
 
+        mapping = EventMapping.load(config)
+
         for r in relevant:
             relevant_event_files.append(
-                EventFile(BaseTest.execute_subject(r, count), count, True)
+                EventFile(BaseTest.execute_subject(r, count), count, mapping, True)
             )
             count += 1
         for r in irrelevant:
             irrelevant_event_files.append(
-                EventFile(BaseTest.execute_subject(r, count), count, False)
+                EventFile(BaseTest.execute_subject(r, count), count, mapping, False)
             )
             count += 1
 

@@ -3,13 +3,16 @@ from abc import abstractmethod
 from typing import List
 
 from sflkitlib.events import event
+
+from sflkit import Config
 from sflkit.language.visitor import ASTVisitor
+from sflkit.mapping import EventMapping
 
 
 class Instrumentation:
     def __init__(self, visitor: ASTVisitor):
         self.visitor = visitor
-        self.events = list()
+        self.events = EventMapping()
 
     @abstractmethod
     def instrument(
@@ -17,9 +20,8 @@ class Instrumentation:
     ):
         raise NotImplementedError()
 
-    def dump_events(self, out_file):
-        with open(out_file, "w") as fp:
-            json.dump(self.events, fp, cls=event.EventEncoder)
+    def dump_events(self, config: Config):
+        self.events.write(config)
 
 
 __all__ = ["dir_instrumentation", "file_instrumentation", "Instrumentation"]

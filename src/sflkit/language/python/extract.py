@@ -156,7 +156,7 @@ class PythonConditionExtract(ast.NodeVisitor, ConditionExtract):
         e = ConditionEvent(
             self.file,
             val.lineno,
-            self.factory.id_generator.get_next_id(),
+            self.factory.event_id_generator.get_next_id(),
             expression,
             tmp_var=var,
         )
@@ -201,7 +201,7 @@ class PythonConditionExtract(ast.NodeVisitor, ConditionExtract):
         es = list()
         if isinstance(node.op, ast.And):
             _, use_, assign, e = tmp_vars[-1]
-            es.append(e)
+            es += e
             variables = [use_]
             for var_, use_, assign_, events in reversed(tmp_vars[:-1]):
                 variables.append(use_)

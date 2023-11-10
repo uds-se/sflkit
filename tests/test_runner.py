@@ -4,6 +4,7 @@ from pathlib import Path
 from sflkit import Config, instrument_config, Analyzer
 from sflkit.analysis.analysis_type import AnalysisType
 from sflkit.analysis.suggestion import Location
+from sflkit.mapping import EventMapping
 from sflkit.model import EventFile
 from sflkit.runners.run import (
     PytestRunner,
@@ -45,16 +46,18 @@ class RunnerTests(BaseTest):
         self.assertPathExists(output / "passing")
         self.assertPathExists(output / "failing")
         self.assertPathExists(output / "undefined")
+        mapping = EventMapping.load(config)
         analyzer = Analyzer(
             [
                 EventFile(
                     output / "failing" / os.listdir(output / "failing")[0],
                     0,
+                    mapping,
                     failing=True,
                 )
             ],
             [
-                EventFile(output / "passing" / path, run_id)
+                EventFile(output / "passing" / path, run_id, mapping)
                 for run_id, path in enumerate(os.listdir(output / "passing"), start=1)
             ],
             config.factory,
@@ -87,16 +90,18 @@ class RunnerTests(BaseTest):
         self.assertPathExists(output / "passing")
         self.assertPathExists(output / "failing")
         self.assertPathExists(output / "undefined")
+        mapping = EventMapping.load(config)
         analyzer = Analyzer(
             [
                 EventFile(
                     output / "failing" / os.listdir(output / "failing")[0],
                     0,
+                    mapping,
                     failing=True,
                 )
             ],
             [
-                EventFile(output / "passing" / path, run_id)
+                EventFile(output / "passing" / path, run_id, mapping)
                 for run_id, path in enumerate(os.listdir(output / "passing"), start=1)
             ],
             config.factory,
