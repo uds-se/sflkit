@@ -12,7 +12,12 @@ from typing import List, Dict, Optional, Tuple
 Environment = Dict[str, str]
 
 PYTEST_RESULT_PATTERN = re.compile(
-    rb"= ((((?P<f>\d+) failed)|((?P<p>\d+) passed)|(\d+ warnings?))(, )?)+ in "
+    rb"=( |\x1b\[\d+m)+(("
+    rb"((?P<f>\d+) failed)|"
+    rb"((?P<p>\d+) passed)|"
+    rb"(\d+ (skipped|warning(s?)|"
+    rb"(error(s?)))))"
+    rb"(( |\x1b\[\d+m)*,( |\x1b\[\d+m)+)?)+( |\x1b\[\d+m)+in( |\x1b\[\d+m)+"
 )
 
 DEFAULT_TIMEOUT = 10
