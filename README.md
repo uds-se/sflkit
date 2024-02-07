@@ -95,3 +95,27 @@ sflkit -c path/to/your/config analyze
 ```
 which produces an output with the suggested code locations for the analysis objects and metrics defined in the config 
 file.
+
+## Citing SFLKit
+
+You can cite SFLKit as following
+```bibtex
+@inproceedings{10.1145/3540250.3558915,
+  author = {Smytzek, Marius and Zeller, Andreas},
+  title = {SFLKit: a workbench for statistical fault localization},
+  year = {2022},
+  isbn = {9781450394130},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  url = {https://doi.org/10.1145/3540250.3558915},
+  doi = {10.1145/3540250.3558915},
+  abstract = {Statistical fault localization aims at detecting execution features that correlate with failures, such as whether individual lines are part of the execution. We introduce SFLKit, an out-of-the-box workbench for statistical fault localization. The framework provides straightforward access to the fundamental concepts of statistical fault localization. It supports five predicate types, four coverage-inspired spectra, like lines, and 44 similarity coefficients, e.g., TARANTULA or OCHIAI, for statistical program analysis.  
+  SFLKit separates the execution of tests from the analysis of the results and is therefore independent of the used testing framework. It leverages program instrumentation to enable the logging of events and derives the predicates and spectra from these logs. This instrumentation allows for introducing multiple programming languages and the extension of new concepts in statistical fault localization. Currently, SFLKit supports the instrumentation of Python programs. It is highly configurable, requiring only the logging of the required events.},
+  booktitle = {Proceedings of the 30th ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering},
+  pages = {1701–1705},
+  numpages = {5},
+  keywords = {similarity coefficient, spectrum-based fault localization, statistical debugging, statistical fault localization},
+  location = {<conf-loc>, <city>Singapore</city>, <country>Singapore</country>, </conf-loc>},
+  series = {ESEC/FSE 2022}
+}
+```
