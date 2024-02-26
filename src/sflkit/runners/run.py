@@ -36,6 +36,14 @@ class Runner(abc.ABC):
     def __init__(self, re_filter: str = r".*", timeout=DEFAULT_TIMEOUT):
         self.timeout = timeout
         self.re_filter = re.compile(re_filter)
+        self.passing = set()
+        self.failing = set()
+        self.undefined = set()
+        self.tests = {
+            TestResult.PASSING: self.passing,
+            TestResult.FAILING: self.failing,
+            TestResult.UNDEFINED: self.undefined,
+        }
 
     def get_tests(
         self,
@@ -77,6 +85,7 @@ class Runner(abc.ABC):
             (output / test_result.get_dir()).mkdir(parents=True, exist_ok=True)
         for run_id, test in enumerate(tests):
             test_result = self.run_test(directory, test, environ=environ)
+            self.tests[test_result].add(test)
             if os.path.exists(directory / "EVENTS_PATH"):
                 shutil.move(
                     directory / "EVENTS_PATH",
@@ -91,6 +100,9 @@ class Runner(abc.ABC):
         base: Optional[os.PathLike] = None,
         environ: Environment = None,
     ):
+        self.passing.clear()
+        self.failing.clear()
+        self.undefined.clear()
         self.run_tests(
             directory,
             output,
