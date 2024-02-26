@@ -36,13 +36,13 @@ class Runner(abc.ABC):
     def __init__(self, re_filter: str = r".*", timeout=DEFAULT_TIMEOUT):
         self.timeout = timeout
         self.re_filter = re.compile(re_filter)
-        self.passing = set()
-        self.failing = set()
-        self.undefined = set()
+        self.passing_tests = set()
+        self.failing_tests = set()
+        self.undefined_tests = set()
         self.tests = {
-            TestResult.PASSING: self.passing,
-            TestResult.FAILING: self.failing,
-            TestResult.UNDEFINED: self.undefined,
+            TestResult.PASSING: self.passing_tests,
+            TestResult.FAILING: self.failing_tests,
+            TestResult.UNDEFINED: self.undefined_tests,
         }
 
     def get_tests(
@@ -100,9 +100,9 @@ class Runner(abc.ABC):
         base: Optional[os.PathLike] = None,
         environ: Environment = None,
     ):
-        self.passing.clear()
-        self.failing.clear()
-        self.undefined.clear()
+        self.passing_tests.clear()
+        self.failing_tests.clear()
+        self.undefined_tests.clear()
         self.run_tests(
             directory,
             output,
