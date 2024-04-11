@@ -86,9 +86,11 @@ class Config:
             try:
                 # target section
                 target = config["target"]
-                self.target_path = Path(target["path"])
-                self.language = Language[target["language"].upper()]
-                self.language.setup()
+                if "path" in target:
+                    self.target_path = Path(target["path"])
+                if "language" in target:
+                    self.language = Language[target["language"].upper()]
+                    self.language.setup()
 
                 # events section
                 events = config["events"]
@@ -111,7 +113,7 @@ class Config:
                     self.events = {
                         e for p in self.predicates for e in analysis_mapping[p].events()
                     }
-                else:
+                elif "events" in events:
                     self.factory = CombinationFactory(list())
                     # get the events
                     self.events = list(
@@ -331,7 +333,11 @@ class Config:
             conf.write(fp)
 
     def identifier(self):
-        return hashlib.md5(str(self.target_path).encode("utf-8")).hexdigest()
+        return hash_identifier(self.target_path)
+
+
+def hash_identifier(path: os.PathLike):
+    return hashlib.md5(str(path).encode("utf-8")).hexdigest()
 
 
 def parse_config(path: str) -> Config:

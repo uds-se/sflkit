@@ -18,6 +18,7 @@ class EventFile(object):
 
     def __enter__(self):
         self._file_pointer = open(self.path, "rb")
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._file_pointer.close()

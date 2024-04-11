@@ -28,6 +28,7 @@ class AnalysisType(enum.Enum):
     SPECIAL_STRING = 13
     EMPTY_BYTES = 14
     LENGTH = 15
+    FUNCTION_ERROR = 16
 
     def __str__(self):
         return self.name

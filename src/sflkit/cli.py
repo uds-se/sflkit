@@ -7,11 +7,15 @@ from typing import Any
 
 import sflkit
 from sflkit.analysis.suggestion import Suggestion, Location
+from sflkit.config import hash_identifier
 from sflkit.logger import LOGGER
+from sflkit.mapping import EventMapping
+from sflkit.model import EventFile
 
 INSTRUMENT = "instrument"
 RUN = "run"
 ANALYZE = "analyze"
+READ = "read"
 
 
 class ResultEncoder(json.JSONEncoder):
@@ -51,6 +55,14 @@ def main(*args: str, stdout=sys.stdout, stderr=sys.stderr):
         results = sflkit.analyze(args.config, args.analysis)
         with open(args.out, "w") as output:
             json.dump(results, output, cls=ResultEncoder, indent=4)
+    elif args.command == READ:
+        mapping = EventMapping.load_from_file(hash_identifier(args.target))
+        with EventFile(args.event_file, 0, mapping) as event_file:
+            for i, event in enumerate(event_file.load()):
+                print(f"{i:>5}: {event}")
+                if (i + 1) % 10 == 0:
+                    input("Press Enter to continue... ")
+                    print("\033[F\033[K", end="")
 
 
 def parse_args(args=None, namespace=None):
@@ -66,9 +78,6 @@ def parse_args(args=None, namespace=None):
         default=False,
         help="the debug flag to activate debug information",
     )
-    arg_parser.add_argument(
-        "-c", "--config", dest="config", required=True, help="path to the config file"
-    )
     commands = arg_parser.add_subparsers(
         title="command",
         description="The framework allows for the execution of various commands.",
@@ -77,11 +86,14 @@ def parse_args(args=None, namespace=None):
         required=True,
     )
 
-    commands.add_parser(
+    instrument_parser = commands.add_parser(
         INSTRUMENT,
         description="The instrumentation command instruments a subject to collect "
         "various predicates during its execution.",
         help="execute the instrumentation of subject",
+    )
+    instrument_parser.add_argument(
+        "-c", "--config", dest="config", required=True, help="path to the config file"
     )
 
     analyze_parser = commands.add_parser(
@@ -89,6 +101,9 @@ def parse_args(args=None, namespace=None):
         description="The analyze command analyzes the collected predicates on a "
         "subject to detect the statistically correlating ones.",
         help="execute the analysis of the collected predicates",
+    )
+    analyze_parser.add_argument(
+        "-c", "--config", dest="config", required=True, help="path to the config file"
     )
     analyze_parser.add_argument(
         "-a",
@@ -106,18 +121,42 @@ def parse_args(args=None, namespace=None):
         help="The report of the final results, i.e. the suggestions sorted by analysis",
     )
 
-    analyze_parser = commands.add_parser(
+    run_parser = commands.add_parser(
         RUN,
         description="The run command executes the tests of the subject and creates the event files.",
         help="execute the tests and collect predicates",
     )
-    analyze_parser.add_argument(
+    run_parser.add_argument(
+        "-c", "--config", dest="config", required=True, help="path to the config file"
+    )
+    run_parser.add_argument(
         "-o",
         "--out",
         dest="out",
         default=None,
         help="The output path of the event files.",
     )
+
+    read_parser = commands.add_parser(
+        READ,
+        description="The read command reads an event file and prints the events.",
+        help="read an event file",
+    )
+    read_parser.add_argument(
+        "-e",
+        "--events",
+        dest="event_file",
+        required=True,
+        help="The input path of the event file.",
+    )
+    read_parser.add_argument(
+        "-t",
+        "--target",
+        dest="target",
+        required=True,
+        help="The path of the target to investigate.",
+    )
+
     return arg_parser.parse_args(args=args, namespace=namespace)
 
 
