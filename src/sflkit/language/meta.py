@@ -61,7 +61,7 @@ class TmpGenerator:
         self.random = random.randbytes(4).hex()
 
     def get_var_name(self):
-        var = f"sd_tmp_{self.random}_{self._tmp_count}"
+        var = f"sk_tmp_{self.random}_{self._tmp_count}"
         self._tmp_count += 1
         return var
 

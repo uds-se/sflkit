@@ -6,6 +6,7 @@ from sflkit.analysis.predicate import (
     VariablePredicate,
     ReturnPredicate,
     NonePredicate,
+    FunctionErrorPredicate,
 )
 from sflkit.analysis.predicate import (
     EmptyStringPredicate,
@@ -39,6 +40,7 @@ analysis_mapping[AnalysisType.ASCII_STRING] = IsAsciiPredicate
 analysis_mapping[AnalysisType.DIGIT_STRING] = ContainsDigitPredicate
 analysis_mapping[AnalysisType.SPECIAL_STRING] = ContainsSpecialPredicate
 analysis_mapping[AnalysisType.CONDITION] = Condition
+analysis_mapping[AnalysisType.FUNCTION_ERROR] = FunctionErrorPredicate
 
 """
 If you want to add new spectra or predicates, please register them here and in sdtools/analysis/analysis_type.py

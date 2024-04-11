@@ -18,6 +18,7 @@ from sflkit.analysis.predicate import (
     ContainsDigitPredicate,
     ContainsSpecialPredicate,
     EmptyBytesPredicate,
+    FunctionErrorPredicate,
 )
 from sflkit.analysis.spectra import Line, Function, Loop, DefUse, Length
 from sflkit.model.scope import Scope
@@ -429,6 +430,29 @@ class LengthFactory(AnalysisFactory):
             return self.objects[key][:]
 
 
+class FunctionErrorFactory(AnalysisFactory):
+    def __init__(self):
+        super().__init__()
+        self.function_mapping = dict()
+
+    def get_analysis(self, event, scope: Scope = None) -> List[AnalysisObject]:
+        if event.event_type == EventType.FUNCTION_ENTER:
+            self.function_mapping[event.function_id] = event.line
+        if event.event_type in (EventType.FUNCTION_ERROR, EventType.FUNCTION_EXIT):
+            line = self.function_mapping[event.function_id]
+            key = (
+                FunctionErrorPredicate.analysis_type(),
+                event.file,
+                line,
+                event.function_id,
+            )
+            if key not in self.objects:
+                self.objects[key] = FunctionErrorPredicate(
+                    event.file, line, event.function
+                )
+            return [self.objects[key]]
+
+
 analysis_factory_mapping = {
     AnalysisType.LINE: LineFactory,
     AnalysisType.BRANCH: BranchFactory,
@@ -446,4 +470,5 @@ analysis_factory_mapping = {
     AnalysisType.VARIABLE: VariableFactory,
     AnalysisType.SCALAR_PAIR: ScalarPairFactory,
     AnalysisType.FUNCTION: FunctionFactory,
+    AnalysisType.FUNCTION_ERROR: FunctionErrorFactory,
 }

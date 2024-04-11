@@ -27,12 +27,16 @@ class EventMapping:
     def load(config: Any):
         if not hasattr(config, "identifier"):
             raise InstrumentationError(f"Argument does not have an identifier")
-        file = EventMapping.get_path(config.identifier())
+        return EventMapping.load_from_file(config.identifier())
+
+    @staticmethod
+    def load_from_file(identifier: str):
+        file = EventMapping.get_path(identifier)
         if file.exists():
             return EventMapping(load_json(file))
         else:
             raise InstrumentationError(
-                f"Cannot find information about instrumentation of {config.identifier()}"
+                f"Cannot find information about instrumentation of {identifier or file}"
             )
 
     def write(self, config):

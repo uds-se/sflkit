@@ -521,7 +521,7 @@ class FunctionErrorEventFactory(FunctionEventFactory):
         function_error_event = FunctionErrorEvent(
             self.file,
             node.lineno,
-            self.get_function_event_id(node, self.event_id_generator),
+            self.event_id_generator.get_next_id(),
             node.name,
             self.get_function_id(node),
         )
