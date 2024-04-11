@@ -18,6 +18,7 @@ class BaseTest(unittest.TestCase):
     TEST_PATH = "EVENTS_PATH"
     PYTHON = "python3.10"
     ACCESS = "main.py"
+    TEST_ERROR = "test_error"
     TEST_LINES = "test_lines"
     TEST_LEN = "test_len"
     TEST_BRANCHES = "test_branches"

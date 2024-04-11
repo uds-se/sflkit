@@ -307,3 +307,31 @@ class SuggestionsFromConditionsLoopTest(BaseTest):
         self.assertAlmostEqual(0.5, suggestions[0].suspiciousness, delta=self.DELTA)
         self.assertEqual(1, len(suggestions[0].lines))
         self.assertIn(Location("main.py", 7), suggestions[0].lines)
+
+
+class SuggestionsFromPredicatesFunctionErrorTest(BaseTest):
+    @classmethod
+    def setUpClass(cls):
+        cls.analyzer = cls.run_analysis(
+            cls.TEST_ERROR,
+            "",
+            "function_error",
+            relevant=[["-1"]],
+            irrelevant=[["1"]],
+        )
+        cls.original_dir = os.path.join(cls.TEST_RESOURCES, cls.TEST_ERROR)
+
+    def test_function_error_suggestions(self):
+        suggestions = self.analyzer.get_sorted_suggestions(
+            base_dir=self.original_dir,
+            type_=AnalysisType.FUNCTION_ERROR,
+            metric=Spectrum.Tarantula,
+        )
+        self.assertAlmostEqual(1, suggestions[0].suspiciousness, delta=self.DELTA)
+        self.assertEqual(5, len(suggestions[0].lines))
+        for i in range(4, 9):
+            self.assertIn(Location("main.py", i), suggestions[0].lines)
+        self.assertAlmostEqual(0, suggestions[1].suspiciousness, delta=self.DELTA)
+        self.assertEqual(5, len(suggestions[1].lines))
+        for i in range(11, 16):
+            self.assertIn(Location("main.py", i), suggestions[1].lines)

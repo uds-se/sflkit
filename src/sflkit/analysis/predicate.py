@@ -1,9 +1,15 @@
 import enum
 from abc import ABC
-from typing import Tuple, Callable, Optional
+from typing import Tuple, Callable, Optional, List, Type
 
 from sflkitlib.events import EventType
-from sflkitlib.events.event import BranchEvent, FunctionExitEvent, DefEvent
+from sflkitlib.events.event import (
+    BranchEvent,
+    FunctionExitEvent,
+    DefEvent,
+    Event,
+    ConditionEvent,
+)
 
 from sflkit.analysis.analysis_type import AnalysisType, EvaluationResult
 from sflkit.analysis.spectra import Spectrum
@@ -51,12 +57,14 @@ class Predicate(Spectrum, ABC):
                 else:
                     self.false_relevant_observed()
 
-    def hit(self, id_, event, scope_: scope.Scope = None):
-        super(Predicate, self).hit(id_, event, scope_)
+    def hit(self, id_, event: Event, scope_: scope.Scope = None):
         if id_ not in self.true_hits:
             self.true_hits[id_] = 0
-        if self._evaluate_predicate(scope_):
+        if id_ not in self.hits:
+            self.hits[id_] = 0
+        if self._evaluate_predicate(event, scope_):
             self.true_hits[id_] += 1
+            self.hits[id_] += 1
             self.last_evaluation = EvaluationResult.TRUE
         else:
             self.last_evaluation = EvaluationResult.FALSE
@@ -66,7 +74,7 @@ class Predicate(Spectrum, ABC):
             metric = Predicate.IncreaseTrue
         return super().get_metric(metric)
 
-    def _evaluate_predicate(self, scope_: scope.Scope):
+    def _evaluate_predicate(self, event: Event, scope_: scope.Scope):
         return False
 
     def true_relevant_observed(self):
@@ -139,7 +147,7 @@ class Branch(Predicate):
     def events():
         return [EventType.BRANCH]
 
-    def hit(self, id_, event, scope_: scope.Scope = None):
+    def hit(self, id_, event: BranchEvent, scope_: scope.Scope = None):
         if id_ not in self.true_hits:
             self.true_hits[id_] = 0
         if event.then_id == self.then_id:
@@ -206,7 +214,7 @@ class Comparison(Predicate, ABC):
             EventType.FUNCTION_ERROR,
         ]
 
-    def _evaluate_predicate(self, scope_: scope.Scope) -> bool:
+    def _evaluate_predicate(self, event: Event, scope_: scope.Scope) -> bool:
         return self._compare(self._get_first(scope_), self._get_second(scope_))
 
     def _compare(self, first, second) -> bool:
@@ -220,7 +228,7 @@ class Comparison(Predicate, ABC):
 
 
 class ScalarPair(Comparison):
-    def __init__(self, event, op: Comp, var: str):
+    def __init__(self, event: DefEvent, op: Comp, var: str):
         super().__init__(event.file, event.line, op)
         self.var1 = event.var
         self.var2 = var
@@ -240,7 +248,7 @@ class ScalarPair(Comparison):
 
 
 class VariablePredicate(Comparison):
-    def __init__(self, event, op: Comp):
+    def __init__(self, event: DefEvent, op: Comp):
         super().__init__(event.file, event.line, op)
         self.var = event.var
 
@@ -376,7 +384,7 @@ class FunctionPredicate(Predicate, ABC):
             EventType.DEF,
         ]
 
-    def _evaluate_predicate(self, scope_: scope.Scope):
+    def _evaluate_predicate(self, event: Event, scope_: scope.Scope):
         value = scope_.value(self.var)
         return isinstance(value, str) and self.predicate(scope_.value(self.var))
 
@@ -438,7 +446,7 @@ class Condition(Predicate):
     def events():
         return [EventType.CONDITION]
 
-    def hit(self, id_, event, scope_: scope.Scope = None):
+    def hit(self, id_, event: ConditionEvent, scope_: scope.Scope = None):
         super(Predicate, self).hit(id_, event, scope_)
         if id_ not in self.true_hits:
             self.true_hits[id_] = 0
@@ -450,3 +458,34 @@ class Condition(Predicate):
 
     def __str__(self):
         return f"{self.analysis_type()}:{self.file}:{self.line}:{self.condition}"
+
+
+class FunctionErrorPredicate(Predicate):
+    def __init__(self, file, line, function):
+        super().__init__(file, line)
+        self.function = function
+
+    @staticmethod
+    def analysis_type() -> AnalysisType:
+        return AnalysisType.FUNCTION_ERROR
+
+    @staticmethod
+    def events() -> List[Type]:
+        return [
+            EventType.FUNCTION_ENTER,
+            EventType.FUNCTION_ERROR,
+            EventType.FUNCTION_EXIT,
+        ]
+
+    def _evaluate_predicate(self, event: Event, scope_: scope.Scope):
+        return event.event_type == EventType.FUNCTION_ERROR
+
+    def get_suggestion(self, metric: Callable = None, base_dir: str = ""):
+        finder = self.function_finder(self.file, self.line, self.function)
+        return Suggestion(
+            [Location(self.file, line) for line in finder.get_locations(base_dir)],
+            self.get_metric(metric),
+        )
+
+    def __str__(self):
+        return f"{self.analysis_type()}:{self.file}:{self.function}:{self.line}"
