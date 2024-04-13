@@ -103,5 +103,5 @@ class DirInstrumentation(Instrumentation):
                     continue
                 else:
                     self.handle_element(element, file_queue, src, dst, suffixes, check)
-            self.events = self.file_instrumentation.events
+        self.events = self.file_instrumentation.events
         LOGGER.info(f"I found {len(self.events)} events in {src}.")
