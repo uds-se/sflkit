@@ -1,3 +1,4 @@
+import os
 from pickle import PickleError
 
 from sflkitlib.events import event
@@ -7,7 +8,11 @@ from sflkit.mapping import EventMapping
 
 class EventFile(object):
     def __init__(
-        self, path: str, run_id: int, mapping: EventMapping, failing: bool = False
+        self,
+        path: os.PathLike,
+        run_id: int,
+        mapping: EventMapping,
+        failing: bool = False,
     ):
         self.path = path
         self.run_id = run_id

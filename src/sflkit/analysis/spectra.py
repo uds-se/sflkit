@@ -39,7 +39,6 @@ class Spectrum(AnalysisObject, ABC):
         self.failed = failed_observed + failed_not_observed
         self.failed_observed = failed_observed
         self.failed_not_observed = failed_not_observed
-        self.hits = dict()
         self.last_evaluation: EvaluationResult = EvaluationResult.FALSE
 
     def __str__(self):

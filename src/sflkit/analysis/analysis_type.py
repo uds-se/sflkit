@@ -57,6 +57,7 @@ class AnalysisObject(object):
     def __init__(self, event):
         self.suspiciousness: float = 0
         self.last_evaluation: EvaluationResult = EvaluationResult.UNOBSERVED
+        self.hits = dict()
 
     def get_last_evaluation(self, id_: int) -> EvaluationResult:
         return self.last_evaluation

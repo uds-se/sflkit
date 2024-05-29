@@ -1,4 +1,4 @@
-from typing import List
+from typing import Set
 
 from sflkit.model.scope import Scope
 
@@ -68,7 +68,8 @@ class Model(object):
     def exit_scope(self):
         self.variables = self.variables.exit()
 
-    def get_analysis(self) -> List:
+    # noinspection PyUnresolvedReferences
+    def get_analysis(self) -> Set["AnalysisObject"]:
         return self.factory.get_all()
 
     def finalize(self, passed, failed):
