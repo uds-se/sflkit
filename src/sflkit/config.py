@@ -77,6 +77,7 @@ class Config:
         self.instrument_working = None
         self.runner = None
         self.mapping = None
+        self.mapping_path = None
         if path:
             if isinstance(path, configparser.ConfigParser):
                 config = path
@@ -143,10 +144,12 @@ class Config:
                     self.metrics = [Spectrum.Ochiai]
 
                 run_id_generator = IDGenerator()
+                if "mapping" in events:
+                    self.mapping_path = Path(events["mapping"])
                 try:
                     self.mapping = EventMapping.load(self)
                 except InstrumentationError:
-                    self.mapping = EventMapping()
+                    self.mapping = EventMapping(path=self.mapping_path)
                 if "passing" in events:
                     self.passing = self.get_event_files(
                         list(csv.reader([events["passing"]]))[0],
@@ -198,6 +201,7 @@ class Config:
         visitor: ASTVisitor = None,
         passing: List[EventFile] = None,
         failing: List[EventFile] = None,
+        mapping: EventMapping = None,
         instrument_include: List[str] = None,
         instrument_exclude: List[str] = None,
         instrument_working: str = None,
@@ -220,6 +224,10 @@ class Config:
         conf.instrument_exclude = instrument_exclude if instrument_exclude else list()
         conf.instrument_working = instrument_working
         conf.runner = runner
+        if mapping:
+            conf.mapping = mapping
+            if mapping.path:
+                conf.mapping_path = mapping.path
         return conf
 
     @staticmethod
@@ -263,6 +271,7 @@ class Config:
         metrics=None,
         passing=None,
         failing=None,
+        mapping_path=None,
         working=None,
         include=None,
         exclude=None,
@@ -288,6 +297,8 @@ class Config:
             conf["events"]["passing"] = passing
         if failing:
             conf["events"]["failing"] = failing
+        if mapping_path:
+            conf["events"]["mapping"] = mapping_path
         if working:
             conf["instrumentation"]["path"] = working
         if include:
@@ -320,6 +331,8 @@ class Config:
             conf["events"]["passing"] = ",".join(e.path for e in self.passing)
         if self.failing:
             conf["events"]["failing"] = ",".join(e.path for e in self.failing)
+        if self.mapping_path:
+            conf["events"]["mapping"] = str(self.mapping_path)
         if self.instrument_working:
             conf["instrumentation"]["path"] = str(self.instrument_working)
         if self.instrument_include:

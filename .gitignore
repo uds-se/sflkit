@@ -156,3 +156,5 @@ tmp.py
 test_dir/
 .DS_Store
 
+mapping.json
+

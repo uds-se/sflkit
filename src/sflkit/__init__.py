@@ -8,7 +8,7 @@ from sflkit.instrumentation.dir_instrumentation import DirInstrumentation
 
 
 def instrument_config(conf: Config):
-    instrumentation = DirInstrumentation(conf.visitor)
+    instrumentation = DirInstrumentation(conf.visitor, conf.mapping.path)
     instrumentation.instrument(
         conf.target_path,
         conf.instrument_working,
