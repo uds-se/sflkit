@@ -106,6 +106,21 @@ class TestInstrumentation(BaseTest):
             )
         )
 
+    def test_mapping_output(self):
+        instrument_config(
+            Config.create(
+                path=os.path.join(BaseTest.TEST_RESOURCES, "test_instrumentation"),
+                language="python",
+                events="line",
+                predicates="line",
+                working=BaseTest.TEST_DIR,
+                mapping_path="mapping.json",
+            )
+        )
+        mapping = Path("mapping.json")
+        self.assertTrue(mapping.exists())
+        self.assertTrue(mapping.is_file())
+
 
 class TestLib(BaseTest):
     @classmethod

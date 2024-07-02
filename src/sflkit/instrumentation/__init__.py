@@ -1,8 +1,6 @@
-import json
 from abc import abstractmethod
-from typing import List
-
-from sflkitlib.events import event
+from pathlib import Path
+from typing import List, Optional
 
 from sflkit import Config
 from sflkit.language.visitor import ASTVisitor
@@ -10,9 +8,9 @@ from sflkit.mapping import EventMapping
 
 
 class Instrumentation:
-    def __init__(self, visitor: ASTVisitor):
+    def __init__(self, visitor: ASTVisitor, mapping_path: Optional[Path] = None):
         self.visitor = visitor
-        self.events = EventMapping()
+        self.events = EventMapping(path=mapping_path)
 
     @abstractmethod
     def instrument(

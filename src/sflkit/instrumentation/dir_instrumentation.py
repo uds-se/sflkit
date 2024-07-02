@@ -2,6 +2,7 @@ import os
 import queue
 import re
 import shutil
+from pathlib import Path
 from typing import List, Optional, Iterable, Tuple
 
 from sflkit.instrumentation import Instrumentation
@@ -11,9 +12,9 @@ from sflkit.logger import LOGGER
 
 
 class DirInstrumentation(Instrumentation):
-    def __init__(self, visitor: ASTVisitor):
-        super().__init__(visitor)
-        self.file_instrumentation = FileInstrumentation(visitor)
+    def __init__(self, visitor: ASTVisitor, mapping_path: Optional[Path] = None):
+        super().__init__(visitor, mapping_path)
+        self.file_instrumentation = FileInstrumentation(visitor, mapping_path)
 
     @staticmethod
     def check_included(element: str, includes: Optional[Iterable[str]]):
