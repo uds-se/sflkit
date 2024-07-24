@@ -2,8 +2,7 @@ import atexit
 import os
 from pathlib import Path
 
-from parameterized import parameterized
-from sflkitlib.events import event, EventType
+from sflkitlib.events import EventType
 
 from sflkit import instrument_config, Config
 from utils import BaseTest
@@ -121,6 +120,61 @@ class TestInstrumentation(BaseTest):
         self.assertTrue(mapping.exists())
         self.assertTrue(mapping.is_file())
 
+    def test_instrument_exclude(self):
+        src = Path(BaseTest.TEST_RESOURCES, "test_exclude")
+        dst = Path(BaseTest.TEST_DIR)
+        instrument_config(
+            Config.create(
+                path=str(src),
+                language="python",
+                events="line",
+                predicates="line",
+                working=BaseTest.TEST_DIR,
+                include="included",
+                exclude=os.path.join("included", "excluded"),
+            )
+        )
+        included = dst / "included"
+        excluded = included / "excluded"
+        a = included / "a.py"
+        b = excluded / "b.py"
+        c = dst / "c.py"
+
+        included_src = src / "included"
+        excluded_src = included_src / "excluded"
+        a_src = included_src / "a.py"
+        b_src = excluded_src / "b.py"
+        c_src = src / "c.py"
+
+        self.assertTrue(included.exists())
+        self.assertTrue(included.is_dir())
+        self.assertTrue(excluded.exists())
+        self.assertTrue(excluded.is_dir())
+        self.assertTrue(a.exists())
+        self.assertTrue(a.is_file())
+        self.assertTrue(b.exists())
+        self.assertTrue(b.is_file())
+        self.assertTrue(c.exists())
+        self.assertTrue(c.is_file())
+
+        with open(a, "r") as fp:
+            a_content = fp.read()
+        with open(a_src, "r") as fp:
+            a_src_content = fp.read()
+        self.assertNotEqual(a_src_content, a_content)
+
+        with open(b, "r") as fp:
+            b_content = fp.read()
+        with open(b_src, "r") as fp:
+            b_src_content = fp.read()
+        self.assertEqual(b_src_content, b_content)
+
+        with open(c, "r") as fp:
+            c_content = fp.read()
+        with open(c_src, "r") as fp:
+            c_src_content = fp.read()
+        self.assertEqual(c_src_content, c_content)
+
 
 class TestLib(BaseTest):
     @classmethod
@@ -145,10 +199,6 @@ class TestLib(BaseTest):
 
     def setUp(self) -> None:
         self.events = None
-
-    def load(self) -> None:
-        self.lib.dump_events()
-        self.events = event.load(self.TEST_PATH)
 
     def tearDown(self) -> None:
         # noinspection PyBroadException
