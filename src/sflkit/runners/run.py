@@ -1,6 +1,7 @@
 import abc
 import enum
 import hashlib
+import json
 import os
 import re
 import shutil
@@ -165,24 +166,45 @@ class PytestRunner(Runner):
         directory = directory.absolute()
         if files:
             if isinstance(files, (str, os.PathLike)):
-                c.append(files)
+                c.append(str(files))
             else:
-                c += files
+                c += [str(f) for f in files]
         if base:
             if not files:
-                c.append(base)
+                c.append(str(base))
             root_dir = directory / base
         else:
             root_dir = directory
-        output = subprocess.run(
-            ["python", "-m", "pytest", "--collect-only", "-q"] + c,
-            stdout=subprocess.PIPE,
+        # install collector
+        subprocess.check_call(
+            [
+                "python3",
+                "-m",
+                "pip",
+                "install",
+                "pytest-collect-formatter",
+            ],
             env=environ,
             cwd=directory,
-        ).stdout.decode("utf-8")
-        tests = output.split("\n\n", 1)[0].split("\n")
-        if tests[-1] == "":
-            tests = tests[:-1]
+        )
+        tmp_json = os.path.abspath(f"tmp_{id(self)}.json")
+        subprocess.run(
+            [
+                "python3",
+                "-m",
+                "pytest",
+                "--collect-only",
+                f"--collect-output-file={tmp_json}",
+                "--collect-format=json",
+                "--collect-type=path",
+            ]
+            + c,
+            env=environ,
+            cwd=directory,
+        )
+        with open(tmp_json, "r") as f:
+            tests = self.parse_tests(json.load(f))
+        os.remove(tmp_json)
         return self._normalize_paths(tests, directory, root_dir)
 
     @staticmethod
@@ -207,7 +229,7 @@ class PytestRunner(Runner):
     ) -> TestResult:
         try:
             output = subprocess.run(
-                ["python", "-m", "pytest", test],
+                ["python3", "-m", "pytest", test],
                 stdout=subprocess.PIPE,
                 env=environ,
                 cwd=directory,
@@ -225,6 +247,55 @@ class PytestRunner(Runner):
                 return TestResult.UNDEFINED
         else:
             return TestResult.UNDEFINED
+
+    def parse_tests(self, tests_json: List | Dict):
+        if isinstance(tests_json, dict):
+            tests = self._parse_dict(tests_json)
+        elif isinstance(tests_json, list):
+            tests = self._parse_list(tests_json)
+        else:
+            tests = list()
+        clean_tests = list()
+        for test in tests:
+            if test.startswith(os.sep):
+                test = test[len(os.sep) :]
+            elif test.startswith("::"):
+                test = test[2:]
+            clean_tests.append(test)
+        return clean_tests
+
+    def _parse_list(self, test_list: List[List | Dict]) -> List[str]:
+        tests = list()
+        for test in test_list:
+            if isinstance(test, dict):
+                tests += self._parse_dict(test)
+            elif isinstance(test, list):
+                tests += self._parse_list(test)
+        return tests
+
+    def _parse_dict(self, test: Dict) -> List[str]:
+        children = test.get("children", [])
+        type_ = test.get("type", "")
+        if not type_:
+            return []
+        title = test.get("title", "")
+        if not title:
+            return []
+        if children:
+            children = self._parse_list(children)
+            if type_ == "path":
+                sep = os.sep
+            elif type_ == "pytest_unit":
+                sep = "::"
+            else:
+                return []
+            return [f"{sep}{title}{child}" for child in children]
+        elif type_ == "pytest_unit":
+            return ["::" + title]
+        elif type_ == "path":
+            return [os.sep + title]
+        else:
+            return []
 
 
 class UnittestRunner(Runner):
@@ -288,7 +359,7 @@ class InputRunner(Runner):
             result = TestResult.FAILING
         try:
             process = subprocess.run(
-                ["python", self.access] + test,
+                ["python3", self.access] + test,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 env=environ,
