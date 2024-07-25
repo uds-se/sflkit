@@ -261,55 +261,6 @@ class PytestRunner(Runner):
         else:
             return TestResult.UNDEFINED
 
-    def parse_tests(self, tests_json: List | Dict):
-        if isinstance(tests_json, dict):
-            tests = self._parse_dict(tests_json)
-        elif isinstance(tests_json, list):
-            tests = self._parse_list(tests_json)
-        else:
-            tests = list()
-        clean_tests = list()
-        for test in tests:
-            if test.startswith(os.sep):
-                test = test[len(os.sep) :]
-            elif test.startswith("::"):
-                test = test[2:]
-            clean_tests.append(test)
-        return clean_tests
-
-    def _parse_list(self, test_list: List[List | Dict]) -> List[str]:
-        tests = list()
-        for test in test_list:
-            if isinstance(test, dict):
-                tests += self._parse_dict(test)
-            elif isinstance(test, list):
-                tests += self._parse_list(test)
-        return tests
-
-    def _parse_dict(self, test: Dict) -> List[str]:
-        children = test.get("children", [])
-        type_ = test.get("type", "")
-        if not type_:
-            return []
-        title = test.get("title", "")
-        if not title:
-            return []
-        if children:
-            children = self._parse_list(children)
-            if type_ == "path":
-                sep = os.sep
-            elif type_ == "pytest_unit":
-                sep = "::"
-            else:
-                return []
-            return [f"{sep}{title}{child}" for child in children]
-        elif type_ == "pytest_unit":
-            return ["::" + title]
-        elif type_ == "path":
-            return [os.sep + title]
-        else:
-            return []
-
 
 class UnittestRunner(Runner):
     pass
