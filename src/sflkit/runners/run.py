@@ -201,7 +201,7 @@ class PytestStructure:
                     obj.set_parent(current)
                     current.add_child(obj)
                 elif current.depth >= obj.depth:
-                    while current.depth >= obj.depth and current:
+                    while current and current.depth >= obj.depth:
                         current = current.parent
                     if current is None:
                         trees.append(obj)
