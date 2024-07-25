@@ -119,6 +119,120 @@ class VoidRunner(Runner):
     pass
 
 
+class PytestStructure:
+    def __init__(self, name: str, parent: Optional["PytestStructure"] = None):
+        self.name = name
+        self.children = []
+        self.parent = parent
+        self.depth = 0
+
+    def add_child(self, child):
+        self.children.append(child)
+
+    def set_parent(self, parent):
+        self.parent = parent
+
+    def get_seperator(self):
+        return ""
+
+    def get_tests(self) -> List[str]:
+        if self.children:
+            return [
+                self.name + self.get_seperator() + test
+                for child in self.children
+                for test in child.get_tests()
+            ]
+        else:
+            return [self.name]
+
+    DIR = "Dir"
+    PACKAGE = "Package"
+    MODULE = "Module"
+    CLASS = "Class"
+    FUNCTION = "Function"
+    UNIT_TEST_CASE = "UnitTestCase"
+    TEST_CASE_FUNCTION = "TestCaseFunction"
+
+    @staticmethod
+    def get_pattern(obj):
+        return re.compile(rf"<{obj} ['\"]?(?P<name>[^>'\"]*)['\"]?>")
+
+    @staticmethod
+    def parse_tests(output: str) -> List[str]:
+        trees = []
+        current = None
+        for original_line in output.split("\n"):
+            line = original_line.lstrip()
+            level = len(original_line) - len(line)
+            if f"<{PytestStructure.DIR}" in line:
+                structure = Directory
+                pattern = PytestStructure.get_pattern(PytestStructure.DIR)
+            elif f"<{PytestStructure.PACKAGE}" in line:
+                structure = Directory
+                pattern = PytestStructure.get_pattern(PytestStructure.PACKAGE)
+            elif f"<{PytestStructure.MODULE}" in line:
+                structure = Module
+                pattern = PytestStructure.get_pattern(PytestStructure.MODULE)
+            elif f"<{PytestStructure.CLASS}" in line:
+                structure = Class
+                pattern = PytestStructure.get_pattern(PytestStructure.CLASS)
+            elif f"<{PytestStructure.FUNCTION}" in line:
+                structure = Function
+                pattern = PytestStructure.get_pattern(PytestStructure.FUNCTION)
+            elif f"<{PytestStructure.UNIT_TEST_CASE}" in line:
+                structure = Class
+                pattern = PytestStructure.get_pattern(PytestStructure.UNIT_TEST_CASE)
+            elif f"<{PytestStructure.TEST_CASE_FUNCTION}" in line:
+                structure = Function
+                pattern = PytestStructure.get_pattern(
+                    PytestStructure.TEST_CASE_FUNCTION
+                )
+            else:
+                continue
+            match = pattern.search(line)
+            if match:
+                obj = structure(match.group("name"))
+                obj.depth = level
+                if current is None:
+                    trees.append(obj)
+                elif current.depth < obj.depth:
+                    obj.set_parent(current)
+                    current.add_child(obj)
+                elif current.depth >= obj.depth:
+                    while current.depth >= obj.depth and current:
+                        current = current.parent
+                    if current is None:
+                        trees.append(obj)
+                    else:
+                        obj.set_parent(current)
+                        current.add_child(obj)
+                current = obj
+        return [test for tree in trees for test in tree.get_tests()]
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} {self.name}>"
+
+
+class Directory(PytestStructure):
+    def get_seperator(self):
+        return os.sep
+
+
+class Module(PytestStructure):
+    def get_seperator(self):
+        return "::"
+
+
+class Class(PytestStructure):
+    def get_seperator(self):
+        return "::"
+
+
+class Function(PytestStructure):
+    def get_seperator(self):
+        return "::"
+
+
 class PytestRunner(Runner):
     def __init__(
         self,
@@ -185,21 +299,11 @@ class PytestRunner(Runner):
             root_dir = directory / base
         else:
             root_dir = directory
-        tmp = Path(f"tmp_sflkit_pytest_tmp_{id(self)}").absolute()
-        pytest_main = (
-            Path(__file__).parent.resolve() / "resources" / "pytest_main.py"
-        ).absolute()
-        environ = dict(environ or os.environ)
-        environ["SFLKIT_PYTEST_COLLECTION_FINISH_FILE"] = str(tmp)
-        if self.set_python_path:
-            if "PYTHONPATH" in environ:
-                environ["PYTHONPATH"] = str(directory) + ":" + environ["PYTHONPATH"]
-            else:
-                environ["PYTHONPATH"] = str(directory)
         process = subprocess.run(
             [
                 "python3",
-                str(pytest_main),
+                "-m",
+                "pytest",
                 "--collect-only",
             ]
             + c,
@@ -209,16 +313,8 @@ class PytestRunner(Runner):
             cwd=directory,
         )
         LOGGER.info(f"pytest collection finished with {process.returncode}")
-        if not tmp.exists():
-            tmp = directory / "tmp_sflkit_pytest"
-        if tmp.exists():
-            with open(tmp, "r") as f:
-                tests = [line.strip() for line in f.readlines()]
-            os.remove(tmp)
-            return self._normalize_paths(tests, directory, root_dir)
-        else:
-            LOGGER.warn(f"Could not find {tmp}")
-            return []
+        tests = PytestStructure.parse_tests(process.stdout.decode("utf8"))
+        return self._normalize_paths(tests, directory, root_dir)
 
     @staticmethod
     def __get_pytest_result__(
