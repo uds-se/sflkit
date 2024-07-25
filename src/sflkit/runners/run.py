@@ -196,6 +196,9 @@ class PytestRunner(Runner):
             env=environ,
             cwd=directory,
         )
+        LOGGER.info(f"pytest collection finished with {process.returncode}")
+        LOGGER.info(f"stdout: {process.stdout}")
+        LOGGER.info(f"stderr: {process.stderr}")
         if process.returncode != 0:
             raise subprocess.CalledProcessError(
                 process.returncode, process.args, process.stdout, process.stderr
