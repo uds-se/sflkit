@@ -37,7 +37,7 @@ class RunnerTests(BaseTest):
             exclude="tests",
         )
         instrument_config(config)
-        runner = PytestRunner()
+        runner = PytestRunner(set_python_path=True)
         output = Path(BaseTest.TEST_DIR, "events").absolute()
         runner.run(
             Path(BaseTest.TEST_DIR), output, files=[Path("tests", "test_middle.py")]

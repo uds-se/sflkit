@@ -120,6 +120,15 @@ class VoidRunner(Runner):
 
 
 class PytestRunner(Runner):
+    def __init__(
+        self,
+        re_filter: str = r".*",
+        timeout=DEFAULT_TIMEOUT,
+        set_python_path: bool = False,
+    ):
+        super().__init__(re_filter, timeout)
+        self.set_python_path = set_python_path
+
     @staticmethod
     def _common_base(directory: Path, tests: List[str]) -> Path:
         parts = directory.parts
@@ -182,10 +191,11 @@ class PytestRunner(Runner):
         ).absolute()
         environ = dict(environ or os.environ)
         environ["SFLKIT_PYTEST_COLLECTION_FINISH_FILE"] = str(tmp)
-        if "PYTHONPATH" in environ:
-            environ["PYTHONPATH"] = str(directory) + ":" + environ["PYTHONPATH"]
-        else:
-            environ["PYTHONPATH"] = str(directory)
+        if self.set_python_path:
+            if "PYTHONPATH" in environ:
+                environ["PYTHONPATH"] = str(directory) + ":" + environ["PYTHONPATH"]
+            else:
+                environ["PYTHONPATH"] = str(directory)
         process = subprocess.run(
             [
                 "python3",
@@ -199,12 +209,6 @@ class PytestRunner(Runner):
             cwd=directory,
         )
         LOGGER.info(f"pytest collection finished with {process.returncode}")
-        LOGGER.info(f"stdout: {process.stdout}")
-        LOGGER.info(f"stderr: {process.stderr}")
-        if process.returncode != 0:
-            raise subprocess.CalledProcessError(
-                process.returncode, process.args, process.stdout, process.stderr
-            )
         if not tmp.exists():
             tmp = directory / "tmp_sflkit_pytest"
         if tmp.exists():
