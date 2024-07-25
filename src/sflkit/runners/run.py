@@ -184,6 +184,8 @@ class PytestRunner(Runner):
         environ["SFLKIT_PYTEST_COLLECTION_FINISH_FILE"] = str(tmp)
         if "PYTHONPATH" in environ:
             environ["PYTHONPATH"] = str(directory) + ":" + environ["PYTHONPATH"]
+        else:
+            environ["PYTHONPATH"] = str(directory)
         process = subprocess.run(
             [
                 "python3",
