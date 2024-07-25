@@ -53,6 +53,7 @@ class Runner(abc.ABC):
         files: Optional[List[os.PathLike] | os.PathLike] = None,
         base: Optional[os.PathLike] = None,
         environ: Environment = None,
+        k: str = None,
     ) -> List[str]:
         return []
 
@@ -101,6 +102,7 @@ class Runner(abc.ABC):
         files: Optional[List[os.PathLike] | os.PathLike] = None,
         base: Optional[os.PathLike] = None,
         environ: Environment = None,
+        k: str = None,
     ):
         self.passing_tests.clear()
         self.failing_tests.clear()
@@ -109,7 +111,7 @@ class Runner(abc.ABC):
             directory,
             output,
             self.filter_tests(
-                self.get_tests(directory, files=files, base=base, environ=environ)
+                self.get_tests(directory, files=files, base=base, environ=environ, k=k)
             ),
             environ=environ,
         )
@@ -285,9 +287,13 @@ class PytestRunner(Runner):
         files: Optional[List[os.PathLike] | os.PathLike] = None,
         base: Optional[os.PathLike] = None,
         environ: Environment = None,
+        k: str = None,
     ) -> List[str]:
         c = []
         directory = directory.absolute()
+        if k:
+            c.append("-k")
+            c.append(k)
         if files:
             if isinstance(files, (str, os.PathLike)):
                 c.append(str(files))
@@ -405,6 +411,7 @@ class InputRunner(Runner):
         files: Optional[List[os.PathLike] | os.PathLike] = None,
         base: Optional[os.PathLike] = None,
         environ: Environment = None,
+        k: str = None,
     ) -> List[str]:
         return list(self.passing.keys()) + list(self.failing.keys())
 
