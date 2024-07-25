@@ -849,14 +849,17 @@ class LenEventFactory(DefEventFactory):
                 keywords=[],
             )
         )
-        return If(
-            test=Call(
-                func=Name(id="hasattr"),
-                args=[Name(id=event.var), Constant(value="__len__")],
-                keywords=[],
-            ),
+        return Try(
             body=[call],
+            handlers=[
+                ExceptHandler(
+                    type=Name(id="TypeError"),
+                    name=None,
+                    body=[Pass()],
+                )
+            ],
             orelse=[],
+            finalbody=[],
         )
 
     def get_event_call(self, event: LenEvent):
