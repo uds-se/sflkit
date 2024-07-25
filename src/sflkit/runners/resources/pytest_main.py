@@ -1,6 +1,5 @@
 import os
 import sys
-from typing import Union
 
 # noinspection PyPackageRequirements
 from _pytest.config import (
