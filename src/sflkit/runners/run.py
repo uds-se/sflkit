@@ -1,7 +1,6 @@
 import abc
 import enum
 import hashlib
-import json
 import os
 import re
 import shutil
@@ -9,6 +8,8 @@ import string
 import subprocess
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
+
+from sflkit.logger import LOGGER
 
 Environment = Dict[str, str]
 
@@ -175,37 +176,35 @@ class PytestRunner(Runner):
             root_dir = directory / base
         else:
             root_dir = directory
-        # install collector
-        subprocess.check_call(
+        tmp = Path(f"tmp_sflkit_pytest_tmp_{id(self)}").absolute()
+        pytest_main = (
+            Path(__file__).parent.resolve() / "resources" / "pytest_main.py"
+        ).absolute()
+        environ = dict(environ or os.environ)
+        environ["SFLKIT_PYTEST_COLLECTION_FINISH_FILE"] = str(tmp)
+        if "PYTHONPATH" in environ:
+            environ["PYTHONPATH"] = str(directory) + ":" + environ["PYTHONPATH"]
+        process = subprocess.run(
             [
                 "python3",
-                "-m",
-                "pip",
-                "install",
-                "pytest-collect-formatter",
-            ],
-            env=environ,
-            cwd=directory,
-        )
-        tmp_json = os.path.abspath(f"tmp_{id(self)}.json")
-        subprocess.run(
-            [
-                "python3",
-                "-m",
-                "pytest",
+                str(pytest_main),
                 "--collect-only",
-                f"--collect-output-file={tmp_json}",
-                "--collect-format=json",
-                "--collect-type=path",
             ]
             + c,
+            stdout=subprocess.PIPE,
             env=environ,
             cwd=directory,
         )
-        with open(tmp_json, "r") as f:
-            tests = self.parse_tests(json.load(f))
-        os.remove(tmp_json)
-        return self._normalize_paths(tests, directory, root_dir)
+        if not tmp.exists():
+            tmp = directory / "tmp_sflkit_pytest"
+        if tmp.exists():
+            with open(tmp, "r") as f:
+                tests = [line.strip() for line in f.readlines()]
+            os.remove(tmp)
+            return self._normalize_paths(tests, directory, root_dir)
+        else:
+            LOGGER.warn(f"Could not find {tmp}")
+            return []
 
     @staticmethod
     def __get_pytest_result__(
