@@ -192,9 +192,14 @@ class PytestRunner(Runner):
             ]
             + c,
             stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             env=environ,
             cwd=directory,
         )
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(
+                process.returncode, process.args, process.stdout, process.stderr
+            )
         if not tmp.exists():
             tmp = directory / "tmp_sflkit_pytest"
         if tmp.exists():
