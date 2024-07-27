@@ -292,7 +292,14 @@ class PytestRunner(Runner):
             base = self._common_base(directory, tests)
             if base is None and root_dir:
                 base = self._common_base(root_dir, tests)
-            if base is not None:
+            if base is None and root_dir is not None:
+                result = []
+                for r in tests:
+                    path, test = r.split("::", 1)
+                    result.append(
+                        str((root_dir / path).relative_to(directory)) + "::" + test
+                    )
+            elif base is not None:
                 result = []
                 for r in tests:
                     path, test = r.split("::", 1)
