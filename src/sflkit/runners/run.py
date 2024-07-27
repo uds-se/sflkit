@@ -209,6 +209,10 @@ class PytestStructure:
                     or match.group("name_double")
                     or match.group("name")
                 )
+                if match.group("name_single"):
+                    name = name.replace("\\'", "'")
+                elif match.group("name_double"):
+                    name = name.replace('\\"', '"')
                 obj = structure(name)
                 obj.depth = level
                 if current is None:
