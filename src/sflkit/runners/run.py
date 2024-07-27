@@ -166,6 +166,10 @@ class PytestStructure:
         )
 
     @staticmethod
+    def clean_line(line: str) -> str:
+        return line.replace("\\\\", "\\")
+
+    @staticmethod
     def parse_tests(output: str) -> List[str]:
         trees = []
         current = None
@@ -197,6 +201,7 @@ class PytestStructure:
                 )
             else:
                 continue
+            line = PytestStructure.clean_line(line)
             match = pattern.search(line)
             if match:
                 name = (
