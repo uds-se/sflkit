@@ -17,7 +17,7 @@ PYTEST_RESULT_PATTERN = re.compile(
     rb"=( |\x1b\[\d+m)+(("
     rb"((?P<f>\d+) failed)|"
     rb"((?P<p>\d+) passed)|"
-    rb"(\d+ (skipped|warning(s?)|"
+    rb"(\d+ (skipped|warning(s?)|deselected|"
     rb"(error(s?)))))"
     rb"(( |\x1b\[\d+m)*,( |\x1b\[\d+m)+)?)+( |\x1b\[\d+m)+in( |\x1b\[\d+m)+"
 )
@@ -157,7 +157,13 @@ class PytestStructure:
 
     @staticmethod
     def get_pattern(obj):
-        return re.compile(rf"<{obj} ['\"]?(?P<name>[^>'\"]*)['\"]?>")
+        return re.compile(
+            rf"<{obj} "
+            r"('(?P<name_single>([^']|\\')*)'"
+            r"|\"(?P<name_double>([^\"]|\\\")*)\""
+            r"|(?P<name>[^\"'][^>]*))"
+            r">"
+        )
 
     @staticmethod
     def parse_tests(output: str) -> List[str]:
@@ -193,7 +199,12 @@ class PytestStructure:
                 continue
             match = pattern.search(line)
             if match:
-                obj = structure(match.group("name"))
+                name = (
+                    match.group("name_single")
+                    or match.group("name_double")
+                    or match.group("name")
+                )
+                obj = structure(name)
                 obj.depth = level
                 if current is None:
                     trees.append(obj)
