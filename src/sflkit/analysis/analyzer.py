@@ -19,6 +19,9 @@ class Analyzer(object):
         self.irrelevant_event_files = irrelevant_event_files
         self.model = Model(factory)
         self.paths: Dict[int, os.PathLike] = dict()
+        self.max_suspiciousness = 0
+        self.min_suspiciousness = 0
+        self.avg_suspiciousness = 0
 
     def _analyze(self, event_file):
         self.model.prepare(event_file)
@@ -48,19 +51,34 @@ class Analyzer(object):
 
     def get_sorted_suggestions(
         self, base_dir, metric: Callable = None, type_: AnalysisType = None
-    ):
+    ) -> List[Suggestion]:
         if type_:
             objects = self.get_analysis_by_type(type_)
         else:
             objects = self.get_analysis()
+        return self.get_sorted_suggestions_from_analysis(base_dir, objects, metric)
+
+    def get_sorted_suggestions_from_analysis(
+        self, base_dir, analysis: Set[AnalysisObject], metric: Callable = None
+    ) -> List[Suggestion]:
         suggestions = dict()
+        max_suspiciousness = float("-inf")
+        min_suspiciousness = float("inf")
+        avg_suspiciousness = 0
         for suggestion in map(
-            lambda p: p.get_suggestion(metric=metric, base_dir=base_dir), objects
+            lambda p: p.get_suggestion(metric=metric, base_dir=base_dir), analysis
         ):
+            max_suspiciousness = max(max_suspiciousness, suggestion.suspiciousness)
+            min_suspiciousness = min(min_suspiciousness, suggestion.suspiciousness)
+            avg_suspiciousness += suggestion.suspiciousness
             if suggestion.suspiciousness not in suggestions:
                 suggestions[suggestion.suspiciousness] = set(suggestion.lines)
             else:
                 suggestions[suggestion.suspiciousness] |= set(suggestion.lines)
+
+        self.max_suspiciousness = max_suspiciousness
+        self.min_suspiciousness = min_suspiciousness
+        self.avg_suspiciousness = avg_suspiciousness / len(analysis)
 
         return sorted(
             [
