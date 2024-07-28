@@ -12,7 +12,7 @@ from sflkit.model import EventFile
 
 
 class BaseTest(unittest.TestCase):
-    TEST_RESOURCES = os.path.join("resources", "subjects", "tests")
+    TEST_RESOURCES = os.path.abspath(os.path.join("resources", "subjects", "tests"))
     TEST_DIR = "test_dir"
     TEST_EVENTS = "test_events.json"
     TEST_PATH = "EVENTS_PATH"

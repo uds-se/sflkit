@@ -7,7 +7,7 @@ import shutil
 import string
 import subprocess
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Set
 
 from sflkit.logger import LOGGER
 
@@ -267,13 +267,10 @@ class PytestRunner(Runner):
         self.set_python_path = set_python_path
 
     @staticmethod
-    def _common_base(directory: Path, tests: List[str]) -> Path:
+    def common_base(directory: Path, tests: List[str]) -> Path:
         parts = directory.parts
         common_bases = {Path(*parts[:i]) for i in range(1, len(parts) + 1)}
-        if "::" in tests[0]:
-            leaves_paths = {Path(r.split("::")[0]) for r in tests}
-        else:
-            leaves_paths = {Path(r) for r in tests}
+        leaves_paths = {Path(r.split("::", 1)[0] if "::" in r else r) for r in tests}
         common_bases = set(
             filter(
                 lambda p: all(map(lambda r: Path(p, *r.parts).exists(), leaves_paths)),
@@ -286,7 +283,7 @@ class PytestRunner(Runner):
             return None
 
     @staticmethod
-    def _common_path(files: List[str]) -> Optional[Path]:
+    def common_path(files: List[str]) -> Optional[Path]:
         paths = []
         for f in files:
             if "::" in f:
@@ -298,36 +295,69 @@ class PytestRunner(Runner):
             return Path(common_path)
         return None
 
-    def _normalize_paths(
-        self,
+    @staticmethod
+    def get_files(files: List[os.PathLike]) -> Set[str]:
+        paths = set()
+        for f in files:
+            f = str(f)
+            if "::" in f:
+                paths.add(f.split("::", 1)[0])
+            else:
+                paths.add(f)
+        return paths
+
+    @staticmethod
+    def get_absolute_files(
+        files: Set[str], directory: Optional[Path] = None
+    ) -> Set[Path]:
+        result = set()
+        for f in files:
+            f = Path(f)
+            if f.is_absolute() or directory is None:
+                result.add(f)
+            else:
+                result.add(directory / f)
+        return result
+
+    @staticmethod
+    def normalize_paths(
         tests: List[str],
-        file_base: Optional[Path] = None,
+        files: Set[str] = None,
         directory: Optional[Path] = None,
         root_dir: Optional[Path] = None,
     ):
         result = tests
+
         if directory:
-            base = None
-            if file_base:
-                base = self._common_base(file_base, tests)
-            if base is None:
-                base = self._common_base(directory, tests)
-            if base is None and root_dir:
-                base = self._common_base(root_dir, tests)
-            if base is None and root_dir is not None:
+            if files:
                 result = []
                 for r in tests:
-                    path, test = r.split("::", 1)
-                    result.append(
-                        str((root_dir / path).relative_to(directory)) + "::" + test
-                    )
-            elif base is not None:
-                result = []
-                for r in tests:
-                    path, test = r.split("::", 1)
-                    result.append(
-                        str((base / path).relative_to(directory)) + "::" + test
-                    )
+                    for f in files:
+                        base = PytestRunner.common_base(f, [r])
+                        if base is not None:
+                            path, test = r.split("::", 1)
+                            result.append(
+                                str((base / path).relative_to(directory)) + "::" + test
+                            )
+                            break
+            else:
+                base = PytestRunner.common_base(directory, tests)
+                if base is None and root_dir:
+                    base = PytestRunner.common_base(root_dir, tests)
+                if base is None and root_dir is not None:
+                    result = []
+                    for r in tests:
+                        path, test = r.split("::", 1)
+                        result.append(
+                            str((root_dir / path).relative_to(directory)) + "::" + test
+                        )
+                elif base is not None:
+                    result = []
+                    for r in tests:
+                        path, test = r.split("::", 1)
+                        result.append(
+                            str((base / path).relative_to(directory)) + "::" + test
+                        )
         return result
 
     def get_tests(
@@ -355,9 +385,9 @@ class PytestRunner(Runner):
                 str_files = [str(files)]
             else:
                 str_files = [str(f) for f in files]
-            common_path = self._common_path(str_files)
+            common_path = self.common_path(str_files)
             if common_path:
-                common_base = self._common_base(root_dir, [str(common_path)])
+                common_base = self.common_base(root_dir, [str(common_path)])
                 if common_base:
                     file_base = common_base / common_path
                 else:
@@ -378,7 +408,7 @@ class PytestRunner(Runner):
         )
         LOGGER.info(f"pytest collection finished with {process.returncode}")
         tests = PytestStructure.parse_tests(process.stdout.decode("utf8"))
-        return self._normalize_paths(tests, file_base, directory, root_dir)
+        return self.normalize_paths(tests, file_base, directory, root_dir)
 
     @staticmethod
     def __get_pytest_result__(

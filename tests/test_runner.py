@@ -9,6 +9,7 @@ from sflkit.model import EventFile
 from sflkit.runners.run import (
     PytestRunner,
     InputRunner,
+    PytestStructure,
 )
 from tests.utils import BaseTest
 
@@ -112,3 +113,67 @@ class RunnerTests(BaseTest):
         self.assertEqual(1, suggestions[-1].suspiciousness)
         self.assertEqual(1, len(suggestions[-1].lines))
         self.assertEqual(Location("main.py", 10), suggestions[-1].lines[0])
+
+    def test_parse_and_paths(self):
+        collect = (
+            "\n"
+            "<Package b>\n"
+            "  <Module test_b.py>\n"
+            "    <Function test_d>\n"
+            "<Package tests>\n"
+            "  <Module test_a.py>\n"
+            "    <Function test_a>\n"
+            "    <Function test_b>\n"
+            "    <Function test_c>\n"
+        )
+        tests = PytestStructure.parse_tests(collect)
+        self.assertEqual(4, len(tests))
+        self.assertIn(os.path.join("b", "test_b.py::test_d"), tests)
+        self.assertIn(os.path.join("tests", "test_a.py::test_a"), tests)
+        self.assertIn(os.path.join("tests", "test_a.py::test_b"), tests)
+        self.assertIn(os.path.join("tests", "test_a.py::test_c"), tests)
+        files = PytestRunner.get_files(
+            [
+                Path("structure", "tests", "b", "test_b.py"),
+                Path("structure", "tests", "test_a.py::test_a"),
+                Path("structure", "tests", "test_a.py::test_b"),
+                Path("structure", "tests", "test_a.py::test_c"),
+            ]
+        )
+        self.assertEqual(2, len(files))
+        self.assertIn(os.path.join("structure", "tests", "b", "test_b.py"), files)
+        self.assertIn(os.path.join("structure", "tests", "test_a.py"), files)
+        directory = Path(BaseTest.TEST_RESOURCES, "structure")
+        files = PytestRunner.get_absolute_files(
+            files,
+            directory,
+        )
+        self.assertEqual(2, len(files))
+        self.assertIn(
+            directory / "structure" / "tests" / "b" / "test_b.py",
+            files,
+        )
+        self.assertIn(directory / "structure" / "tests" / "test_a.py", files)
+        tests = PytestRunner.normalize_paths(
+            tests,
+            files=files,
+            directory=directory,
+            root_dir=directory / "structure" / "tests",
+        )
+        self.assertEqual(4, len(tests))
+        self.assertIn(
+            os.path.join("structure", "tests", "b", "test_b.py::test_d"),
+            tests,
+        )
+        self.assertIn(
+            os.path.join("structure", "tests", "test_a.py::test_a"),
+            tests,
+        )
+        self.assertIn(
+            os.path.join("structure", "tests", "test_a.py::test_b"),
+            tests,
+        )
+        self.assertIn(
+            os.path.join("structure", "tests", "test_a.py::test_c"),
+            tests,
+        )
