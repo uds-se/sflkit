@@ -341,11 +341,11 @@ class PytestRunner(Runner):
                 str_files = [str(files)]
             else:
                 str_files = [str(f) for f in files]
-            common_base = self._common_base(root_dir, [str(files)])
+            common_base = self._common_base(root_dir, str_files)
             if common_base:
                 file_base = common_base
             elif base:
-                common_base = self._common_base(base, [str(files)])
+                common_base = self._common_base(base, str_files)
                 if common_base:
                     file_base = common_base
             c += str_files
