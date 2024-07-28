@@ -1,4 +1,4 @@
-sflkitlib>=0.0.3
+sflkitlib>=0.0.4
 numpy>=1.23.5
 matplotlib>=3.7.2
 sortedcollections>=2.1.0
