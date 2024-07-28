@@ -322,7 +322,7 @@ class PytestRunner(Runner):
     @staticmethod
     def normalize_paths(
         tests: List[str],
-        files: Set[str] = None,
+        files: Set[Path] = None,
         directory: Optional[Path] = None,
         root_dir: Optional[Path] = None,
     ):
@@ -385,13 +385,7 @@ class PytestRunner(Runner):
                 str_files = [str(files)]
             else:
                 str_files = [str(f) for f in files]
-            common_path = self.common_path(str_files)
-            if common_path:
-                common_base = self.common_base(root_dir, [str(common_path)])
-                if common_base:
-                    file_base = common_base / common_path
-                else:
-                    file_base = root_dir / common_path
+            files_bases = self.get_absolute_files(self.get_files(str_files), directory)
             c += str_files
         process = subprocess.run(
             [
@@ -408,7 +402,7 @@ class PytestRunner(Runner):
         )
         LOGGER.info(f"pytest collection finished with {process.returncode}")
         tests = PytestStructure.parse_tests(process.stdout.decode("utf8"))
-        return self.normalize_paths(tests, file_base, directory, root_dir)
+        return self.normalize_paths(tests, file_bases, directory, root_dir)
 
     @staticmethod
     def __get_pytest_result__(
