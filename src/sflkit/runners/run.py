@@ -201,7 +201,6 @@ class PytestStructure:
                 )
             else:
                 continue
-            line = PytestStructure.clean_line(line)
             match = pattern.search(line)
             if match:
                 name = (
@@ -210,8 +209,10 @@ class PytestStructure:
                     or match.group("name")
                 )
                 if match.group("name_single"):
+                    name = PytestStructure.clean_line(name)
                     name = name.replace("\\'", "'")
                 elif match.group("name_double"):
+                    name = PytestStructure.clean_line(name)
                     name = name.replace('\\"', '"')
                 obj = structure(name)
                 obj.depth = level
