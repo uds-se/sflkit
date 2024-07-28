@@ -379,13 +379,13 @@ class PytestRunner(Runner):
             root_dir = directory / base
         else:
             root_dir = directory
-        file_base = None
+        file_bases = None
         if files:
             if isinstance(files, (str, os.PathLike)):
                 str_files = [str(files)]
             else:
                 str_files = [str(f) for f in files]
-            files_bases = self.get_absolute_files(self.get_files(str_files), directory)
+            file_bases = self.get_absolute_files(self.get_files(str_files), directory)
             c += str_files
         process = subprocess.run(
             [
