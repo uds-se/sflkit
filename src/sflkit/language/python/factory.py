@@ -853,7 +853,19 @@ class LenEventFactory(DefEventFactory):
             body=[call],
             handlers=[
                 ExceptHandler(
-                    type=Name(id="TypeError"),
+                    type=Tuple(
+                        elts=[
+                            Name(
+                                id="AttributeError",
+                            ),
+                            Name(
+                                id="TypeError",
+                            ),
+                            Name(
+                                id="NameError",
+                            ),
+                        ],
+                    ),
                     name=None,
                     body=[Pass()],
                 )
