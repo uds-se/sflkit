@@ -161,7 +161,7 @@ class PytestStructure:
             rf"<{obj} "
             r"('(?P<name_single>([^']|\\')*)'"
             r"|\"(?P<name_double>([^\"]|\\\")*)\""
-            r"|(?P<name>[^\"'][^>]*))"
+            r"|(?P<name>[^\"'].*))"
             r">"
         )
 
