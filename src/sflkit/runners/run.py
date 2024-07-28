@@ -284,6 +284,19 @@ class PytestRunner(Runner):
         else:
             return None
 
+    @staticmethod
+    def _common_path(files: List[str]) -> Optional[Path]:
+        paths = []
+        for f in files:
+            if "::" in f:
+                paths.append(f.split("::")[0])
+            else:
+                paths.append(f)
+        common_path = os.path.commonpath(paths)
+        if common_path:
+            return Path(common_path)
+        return None
+
     def _normalize_paths(
         self,
         tests: List[str],
@@ -341,13 +354,9 @@ class PytestRunner(Runner):
                 str_files = [str(files)]
             else:
                 str_files = [str(f) for f in files]
-            common_base = self._common_base(root_dir, str_files)
-            if common_base:
-                file_base = common_base
-            elif base:
-                common_base = self._common_base(base, str_files)
-                if common_base:
-                    file_base = common_base
+            common_path = self._common_path(str_files)
+            if common_path:
+                file_base = root_dir / common_path
             c += str_files
         process = subprocess.run(
             [
