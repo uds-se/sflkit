@@ -356,7 +356,7 @@ class PytestRunner(Runner):
                 str_files = [str(f) for f in files]
             common_path = self._common_path(str_files)
             if common_path:
-                common_base = self._common_base(root_dir, [common_path])
+                common_base = self._common_base(root_dir, [str(common_path)])
                 if common_base:
                     file_base = common_base / common_path
                 else:
