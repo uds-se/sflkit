@@ -7,7 +7,7 @@ import shutil
 import string
 import subprocess
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Set
 
 from sflkit.logger import LOGGER
 
@@ -269,7 +269,10 @@ class PytestRunner(Runner):
     def _common_base(directory: Path, tests: List[str]) -> Path:
         parts = directory.parts
         common_bases = {Path(*parts[:i]) for i in range(1, len(parts) + 1)}
-        leaves_paths = {Path(r.split("::")[0]) for r in tests}
+        if "::" in tests[0]:
+            leaves_paths = {Path(r.split("::")[0]) for r in tests}
+        else:
+            leaves_paths = {Path(r) for r in tests}
         common_bases = set(
             filter(
                 lambda p: all(map(lambda r: Path(p, *r.parts).exists(), leaves_paths)),
@@ -284,11 +287,28 @@ class PytestRunner(Runner):
     def _normalize_paths(
         self,
         tests: List[str],
+        bases: Optional[Set[str]] = None,
         directory: Optional[Path] = None,
         root_dir: Optional[Path] = None,
     ):
         result = tests
         if directory:
+            if bases:
+                for base in bases:
+                    common = self._common_base(directory, [base])
+                    if common:
+                        base = common / base
+                        base = self._common_base(base, tests)
+                        if base is not None:
+                            result = []
+                            for r in tests:
+                                path, test = r.split("::", 1)
+                                result.append(
+                                    str((base / path).relative_to(directory))
+                                    + "::"
+                                    + test
+                                )
+                            return result
             base = self._common_base(directory, tests)
             if base is None and root_dir:
                 base = self._common_base(root_dir, tests)
@@ -321,11 +341,21 @@ class PytestRunner(Runner):
         if k:
             c.append("-k")
             c.append(k)
+        bases = set()
         if files:
             if isinstance(files, (str, os.PathLike)):
-                c.append(str(files))
+                str_files = [str(files)]
             else:
-                c += [str(f) for f in files]
+                str_files = [str(f) for f in files]
+            common_base = self._common_base(directory, [str(files)])
+            if common_base:
+                bases.add(common_base)
+            elif base:
+                common_base = self._common_base(base, [str(files)])
+                if common_base:
+                    bases.add(common_base)
+            c += str_files
+
         if base:
             if not files:
                 c.append(str(base))
@@ -347,7 +377,7 @@ class PytestRunner(Runner):
         )
         LOGGER.info(f"pytest collection finished with {process.returncode}")
         tests = PytestStructure.parse_tests(process.stdout.decode("utf8"))
-        return self._normalize_paths(tests, directory, root_dir)
+        return self._normalize_paths(tests, bases, directory, root_dir)
 
     @staticmethod
     def __get_pytest_result__(
