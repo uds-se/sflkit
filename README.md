@@ -16,7 +16,7 @@ whether individual lines are part of the execution.
 
 ## Language Support
 
-SFLKit supports currently Python 3 but we plan on releasing further language support.
+SFLKit currently supports Python 3, but we plan on releasing further language support.
 
 ## Installation
 
@@ -24,14 +24,14 @@ You need to navigate to the root directory of SFLKit and run
 ```sh
 pip install sflkit
 ```
-If you have a separate Python 2 and Python 3 on your machine you may need to run
+If you have a separate Python 2 and Python 3 on your machine, you may need to run
 ```sh
 pip3 install sflkit
 ```
 
 ## Execution
 
-To execute SFLKit you need to create a config file matching your needs.
+To execute SFLKit, you need to create a config file that matches your needs.
 
 ### Config
 
@@ -91,7 +91,7 @@ to instrument the project defined by the file.
 After the instrumentation, you can run your tests or experiments. But keep in mind to preserve the `EVENTS_PATH` file 
 for each failing and passing run.
 
-If you want to analyze your runs you need to execute
+If you want to analyze your runs, you need to execute
 ```sh
 sflkit -c path/to/your/config analyze
 ```
